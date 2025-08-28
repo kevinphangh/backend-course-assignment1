@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1400" height="900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Title -->
+  <text x="700" y="30" font-size="22" text-anchor="middle" font-weight="bold">Experience Share App - Entity Relationship Diagram (Chen Notation)</text>
+  
+  <!-- ==================== ENTITIES ==================== -->
+  
+  <!-- Entity: Provider -->
+  <rect x="100" y="150" width="120" height="60" fill="lightblue" stroke="black" stroke-width="2"/>
+  <text x="160" y="185" text-anchor="middle" font-size="14" font-weight="bold">Provider</text>
+  
+  <!-- Provider Attributes -->
+  <ellipse cx="60" cy="100" rx="45" ry="20" fill="white" stroke="black"/>
+  <text x="60" y="105" text-anchor="middle" font-size="12" text-decoration="underline">ProviderID</text>
+  <line x1="85" y1="115" x2="120" y2="150" stroke="black"/>
+  
+  <ellipse cx="160" cy="80" rx="30" ry="20" fill="white" stroke="black"/>
+  <text x="160" y="85" text-anchor="middle" font-size="12">Name</text>
+  <line x1="160" y1="100" x2="160" y2="150" stroke="black"/>
+  
+  <ellipse cx="250" cy="100" rx="40" ry="20" fill="white" stroke="black"/>
+  <text x="250" y="105" text-anchor="middle" font-size="12">Address</text>
+  <line x1="225" y1="115" x2="200" y2="150" stroke="black"/>
+  
+  <ellipse cx="280" cy="150" rx="35" ry="20" fill="white" stroke="black"/>
+  <text x="280" y="155" text-anchor="middle" font-size="12">Phone</text>
+  <line x1="245" y1="150" x2="220" y2="170" stroke="black"/>
+  
+  <ellipse cx="280" cy="210" rx="25" ry="20" fill="white" stroke="black"/>
+  <text x="280" y="215" text-anchor="middle" font-size="12">CVR</text>
+  <line x1="255" y1="195" x2="220" y2="190" stroke="black"/>
+  
+  <!-- Entity: Experience -->
+  <rect x="500" y="150" width="120" height="60" fill="lightblue" stroke="black" stroke-width="2"/>
+  <text x="560" y="185" text-anchor="middle" font-size="14" font-weight="bold">Experience</text>
+  
+  <!-- Experience Attributes -->
+  <ellipse cx="460" cy="100" rx="50" ry="20" fill="white" stroke="black"/>
+  <text x="460" y="105" text-anchor="middle" font-size="12" text-decoration="underline">ExperienceID</text>
+  <line x1="485" y1="115" x2="520" y2="150" stroke="black"/>
+  
+  <ellipse cx="560" cy="80" rx="30" ry="20" fill="white" stroke="black"/>
+  <text x="560" y="85" text-anchor="middle" font-size="12">Name</text>
+  <line x1="560" y1="100" x2="560" y2="150" stroke="black"/>
+  
+  <ellipse cx="660" cy="100" rx="50" ry="20" fill="white" stroke="black"/>
+  <text x="660" y="105" text-anchor="middle" font-size="12">Description</text>
+  <line x1="635" y1="115" x2="600" y2="150" stroke="black"/>
+  
+  <ellipse cx="680" cy="180" rx="30" ry="20" fill="white" stroke="black"/>
+  <text x="680" y="185" text-anchor="middle" font-size="12">Price</text>
+  <line x1="650" y1="180" x2="620" y2="180" stroke="black"/>
+  
+  <!-- Entity: Guest -->
+  <rect x="100" y="500" width="120" height="60" fill="lightblue" stroke="black" stroke-width="2"/>
+  <text x="160" y="535" text-anchor="middle" font-size="14" font-weight="bold">Guest</text>
+  
+  <!-- Guest Attributes -->
+  <ellipse cx="60" cy="450" rx="40" ry="20" fill="white" stroke="black"/>
+  <text x="60" y="455" text-anchor="middle" font-size="12" text-decoration="underline">GuestID</text>
+  <line x1="85" y1="465" x2="120" y2="500" stroke="black"/>
+  
+  <ellipse cx="160" cy="430" rx="30" ry="20" fill="white" stroke="black"/>
+  <text x="160" y="435" text-anchor="middle" font-size="12">Name</text>
+  <line x1="160" y1="450" x2="160" y2="500" stroke="black"/>
+  
+  <ellipse cx="250" cy="450" rx="25" ry="20" fill="white" stroke="black"/>
+  <text x="250" y="455" text-anchor="middle" font-size="12">Age</text>
+  <line x1="225" y1="465" x2="200" y2="500" stroke="black"/>
+  
+  <ellipse cx="280" cy="500" rx="35" ry="20" fill="white" stroke="black"/>
+  <text x="280" y="505" text-anchor="middle" font-size="12">Phone</text>
+  <line x1="245" y1="500" x2="220" y2="530" stroke="black"/>
+  
+  <ellipse cx="280" cy="560" rx="45" ry="20" fill="white" stroke="black"/>
+  <text x="280" y="565" text-anchor="middle" font-size="12">PersonalID</text>
+  <line x1="245" y1="545" x2="220" y2="540" stroke="black"/>
+  
+  <!-- Entity: SharedExperience -->
+  <rect x="500" y="500" width="120" height="60" fill="lightblue" stroke="black" stroke-width="2"/>
+  <text x="560" y="525" text-anchor="middle" font-size="14" font-weight="bold">Shared</text>
+  <text x="560" y="545" text-anchor="middle" font-size="14" font-weight="bold">Experience</text>
+  
+  <!-- SharedExperience Attributes -->
+  <ellipse cx="450" cy="450" rx="70" ry="20" fill="white" stroke="black"/>
+  <text x="450" y="455" text-anchor="middle" font-size="12" text-decoration="underline">SharedExpID</text>
+  <line x1="485" y1="465" x2="520" y2="500" stroke="black"/>
+  
+  <ellipse cx="560" cy="430" rx="30" ry="20" fill="white" stroke="black"/>
+  <text x="560" y="435" text-anchor="middle" font-size="12">Name</text>
+  <line x1="560" y1="450" x2="560" y2="500" stroke="black"/>
+  
+  <ellipse cx="660" cy="450" rx="30" ry="20" fill="white" stroke="black"/>
+  <text x="660" y="455" text-anchor="middle" font-size="12">Date</text>
+  <line x1="635" y1="465" x2="600" y2="500" stroke="black"/>
+  
+  <!-- Entity: Discount -->
+  <rect x="100" y="320" width="120" height="60" fill="lightblue" stroke="black" stroke-width="2"/>
+  <text x="160" y="355" text-anchor="middle" font-size="14" font-weight="bold">Discount</text>
+  
+  <!-- Discount Attributes -->
+  <ellipse cx="60" cy="270" rx="45" ry="20" fill="white" stroke="black"/>
+  <text x="60" y="275" text-anchor="middle" font-size="12" text-decoration="underline">DiscountID</text>
+  <line x1="85" y1="285" x2="120" y2="320" stroke="black"/>
+  
+  <ellipse cx="280" cy="320" rx="45" ry="20" fill="white" stroke="black"/>
+  <text x="280" y="325" text-anchor="middle" font-size="12">MinGuests</text>
+  <line x1="235" y1="320" x2="220" y2="340" stroke="black"/>
+  
+  <ellipse cx="280" cy="380" rx="60" ry="20" fill="white" stroke="black"/>
+  <text x="280" y="385" text-anchor="middle" font-size="12">DiscountPct</text>
+  <line x1="235" y1="365" x2="220" y2="360" stroke="black"/>
+  
+  <!-- ==================== RELATIONSHIPS ==================== -->
+  
+  <!-- Relationship: Offers (Provider-Experience) -->
+  <polygon points="360,180 310,150 360,120 410,150" fill="yellow" stroke="black" stroke-width="2"/>
+  <text x="360" y="155" text-anchor="middle" font-size="12" font-weight="bold">Offers</text>
+  <line x1="220" y1="180" x2="310" y2="180" stroke="black" stroke-width="2"/>
+  <line x1="410" y1="180" x2="500" y2="180" stroke="black" stroke-width="2"/>
+  <text x="240" y="170" text-anchor="middle" font-size="14" font-weight="bold">1</text>
+  <text x="480" y="170" text-anchor="middle" font-size="14" font-weight="bold">N</text>
+  
+  <!-- Relationship: Has (Provider-Discount) -->
+  <polygon points="160,270 130,240 160,210 190,240" fill="yellow" stroke="black" stroke-width="2"/>
+  <text x="160" y="245" text-anchor="middle" font-size="12" font-weight="bold">Has</text>
+  <line x1="160" y1="210" x2="160" y2="210" stroke="black" stroke-width="2"/>
+  <line x1="160" y1="270" x2="160" y2="320" stroke="black" stroke-width="2"/>
+  <text x="145" y="230" text-anchor="middle" font-size="14" font-weight="bold">1</text>
+  <text x="145" y="305" text-anchor="middle" font-size="14" font-weight="bold">N</text>
+  
+  <!-- Relationship: Organizes (Guest-SharedExperience) -->
+  <polygon points="360,530 310,500 360,470 410,500" fill="yellow" stroke="black" stroke-width="2"/>
+  <text x="360" y="505" text-anchor="middle" font-size="12" font-weight="bold">Organizes</text>
+  <line x1="220" y1="530" x2="310" y2="530" stroke="black" stroke-width="2"/>
+  <line x1="410" y1="530" x2="500" y2="530" stroke="black" stroke-width="2"/>
+  <text x="240" y="520" text-anchor="middle" font-size="14" font-weight="bold">1</text>
+  <text x="480" y="520" text-anchor="middle" font-size="14" font-weight="bold">N</text>
+  
+  <!-- Relationship: Includes (SharedExperience-Experience) M:N -->
+  <polygon points="560,380 510,350 560,320 610,350" fill="yellow" stroke="black" stroke-width="2"/>
+  <text x="560" y="355" text-anchor="middle" font-size="12" font-weight="bold">Includes</text>
+  <line x1="560" y1="210" x2="560" y2="320" stroke="black" stroke-width="2"/>
+  <line x1="560" y1="380" x2="560" y2="500" stroke="black" stroke-width="2"/>
+  <text x="545" y="240" text-anchor="middle" font-size="14" font-weight="bold">N</text>
+  <text x="545" y="470" text-anchor="middle" font-size="14" font-weight="bold">M</text>
+  
+  <!-- Additional Attributes for Includes relationship (from SharedExperienceItem) -->
+  <ellipse cx="650" cy="350" rx="75" ry="20" fill="white" stroke="black"/>
+  <text x="650" y="355" text-anchor="middle" font-size="12" text-decoration="underline">SharedExpItemID</text>
+  <line x1="610" y1="350" x2="575" y2="350" stroke="black"/>
+  
+  <!-- Relationship: Books (Guest-SharedExperienceItem) M:N -->
+  <!-- Note: This represents the selective participation - guests book specific items within a shared experience -->
+  <polygon points="360,400 310,370 360,340 410,370" fill="yellow" stroke="black" stroke-width="2"/>
+  <text x="360" y="375" text-anchor="middle" font-size="12" font-weight="bold">Books</text>
+  <line x1="160" y1="500" x2="310" y2="400" stroke="black" stroke-width="2"/>
+  <line x1="410" y1="370" x2="510" y2="350" stroke="black" stroke-width="2"/>
+  <text x="200" y="460" text-anchor="middle" font-size="14" font-weight="bold">M</text>
+  <text x="470" y="360" text-anchor="middle" font-size="14" font-weight="bold">N</text>
+  
+  <!-- Additional Attributes for Books relationship (from Booking) -->
+  <ellipse cx="360" cy="300" rx="45" ry="20" fill="white" stroke="black"/>
+  <text x="360" y="305" text-anchor="middle" font-size="12" text-decoration="underline">BookingID</text>
+  <line x1="360" y1="320" x2="360" y2="340" stroke="black"/>
+  
+  <ellipse cx="460" cy="400" rx="55" ry="20" fill="white" stroke="black"/>
+  <text x="460" y="405" text-anchor="middle" font-size="12">BookingDate</text>
+  <line x1="410" y1="390" x2="405" y2="380" stroke="black"/>
+  
+  <!-- ==================== PARTICIPATION INDICATORS ==================== -->
+  <!-- Total participation lines (double lines) where applicable -->
+  
+  <!-- ==================== LEGEND ==================== -->
+  <text x="950" y="100" font-size="16" font-weight="bold">Legend:</text>
+  
+  <rect x="950" y="120" width="100" height="40" fill="lightblue" stroke="black" stroke-width="2"/>
+  <text x="1000" y="145" text-anchor="middle" font-size="12">Entity</text>
+  
+  <polygon points="1000,190 970,170 1000,150 1030,170" fill="yellow" stroke="black" stroke-width="2"/>
+  <text x="1070" y="175" font-size="12">Relationship</text>
+  
+  <ellipse cx="1000" cy="220" rx="40" ry="20" fill="white" stroke="black"/>
+  <text x="1070" y="225" font-size="12">Attribute</text>
+  
+  <ellipse cx="1000" cy="260" rx="50" ry="20" fill="white" stroke="black"/>
+  <text x="1000" y="265" text-anchor="middle" font-size="12" text-decoration="underline">Primary Key</text>
+  <text x="1070" y="265" font-size="12">(underlined)</text>
+  
+  <text x="950" y="300" font-size="14">Cardinalities:</text>
+  <text x="950" y="320" font-size="12">1 = One (exactly one)</text>
+  <text x="950" y="340" font-size="12">N = Many (zero or more)</text>
+  <text x="950" y="360" font-size="12">M = Many (zero or more)</text>
+  
+  <!-- ==================== NOTES ==================== -->
+  <text x="950" y="420" font-size="14" font-weight="bold">Design Notes:</text>
+  <text x="950" y="445" font-size="11">• The "Includes" relationship represents</text>
+  <text x="960" y="465" font-size="11">SharedExperienceItem junction table</text>
+  <text x="950" y="485" font-size="11">• The "Books" relationship represents</text>
+  <text x="960" y="505" font-size="11">the Booking junction table</text>
+  <text x="950" y="525" font-size="11">• This enables selective participation:</text>
+  <text x="960" y="545" font-size="11">guests can book specific experiences</text>
+  <text x="960" y="565" font-size="11">within a shared experience</text>
+  <text x="950" y="585" font-size="11">• Discount applies to Provider's</text>
+  <text x="960" y="605" font-size="11">experiences based on group size</text>
+  
+  <!-- Footer -->
+  <text x="700" y="870" font-size="12" text-anchor="middle" font-style="italic">Chen Notation - Experience Share App Database Design</text>
+</svg>
