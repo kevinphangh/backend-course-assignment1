@@ -26,8 +26,8 @@ cp -r src/WebAPI $SUBMISSION_DIR/
 cp database/scripts/create_database.sql $SUBMISSION_DIR/
 cp database/scripts/insert_data.sql $SUBMISSION_DIR/
 cp database/scripts/queries.sql $SUBMISSION_DIR/
-cp database/design/er_diagram.svg $SUBMISSION_DIR/
-cp database/design/design_reasoning.md $SUBMISSION_DIR/
+cp database/ERD.png $SUBMISSION_DIR/
+cp database/design_reasoning.pdf $SUBMISSION_DIR/
 
 # Remove build artifacts
 rm -rf $SUBMISSION_DIR/WebAPI/bin
@@ -42,7 +42,12 @@ rm -rf $SUBMISSION_DIR
 
 echo "✓ Submission package created: $ZIP_NAME"
 echo ""
-echo "Before submitting, please ensure:"
-echo "1. Convert er_diagram.svg to PNG or PDF format"
-echo "2. Convert design_reasoning.md to single-page PDF"
-echo "3. Replace the files in the zip with the converted versions"
+echo "Package contents:"
+echo "- WebAPI/ (cleaned .NET solution)"
+echo "- create_database.sql"
+echo "- insert_data.sql"  
+echo "- queries.sql"
+echo "- ERD.png (Chen notation diagram)"
+echo "- design_reasoning.pdf"
+echo ""
+echo "Ready to submit to Brightspace!"
