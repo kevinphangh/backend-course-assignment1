@@ -27,7 +27,7 @@ cp database/scripts/create_database.sql $SUBMISSION_DIR/
 cp database/scripts/insert_data.sql $SUBMISSION_DIR/
 cp database/scripts/queries.sql $SUBMISSION_DIR/
 cp database/ERD.png $SUBMISSION_DIR/
-cp database/design_reasoning.pdf $SUBMISSION_DIR/
+cp database/design_reasoning.md $SUBMISSION_DIR/
 
 # Remove build artifacts
 rm -rf $SUBMISSION_DIR/WebAPI/bin
@@ -48,6 +48,7 @@ echo "- create_database.sql"
 echo "- insert_data.sql"  
 echo "- queries.sql"
 echo "- ERD.png (Chen notation diagram)"
-echo "- design_reasoning.pdf"
+echo "- design_reasoning.md (comprehensive design documentation)"
 echo ""
+echo "Note: If PDF format is required for design_reasoning, convert the .md file to PDF"
 echo "Ready to submit to Brightspace!"
