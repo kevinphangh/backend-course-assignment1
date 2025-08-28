@@ -44,8 +44,9 @@ backend-course/
 │   │   ├── create_database.sql            # Schema definition
 │   │   ├── insert_data.sql                # Sample data
 │   │   └── queries.sql                    # 10 required queries
-│   ├── ERD.png                            # Chen notation diagram
-│   └── design_reasoning.md                # Design documentation
+│   └── design/
+│       ├── ERD.png                        # Chen notation diagram
+│       └── design_reasoning.md            # Design documentation
 └── prepare_submission.sh                   # Submission packager
 ```
 
@@ -136,11 +137,11 @@ Returns available experiences as JSON array.
 ### Clean and Prepare
 
 ```bash
-# Clean solution before submission
+# Optional: Clean build outputs (removes most build artifacts)
 cd src/WebAPI
 dotnet clean
 
-# Create submission package
+# Create submission package (handles complete cleanup automatically)
 cd ../..
 chmod +x prepare_submission.sh
 ./prepare_submission.sh au123456  # Replace with your AU ID
@@ -149,12 +150,18 @@ chmod +x prepare_submission.sh
 ```
 
 ### Submission Package Contents
-- `WebAPI/` - Cleaned .NET solution (no bin/obj)
+- `WebAPI/` - Cleaned .NET solution (bin/obj directories removed)
 - `create_database.sql` - Database schema
 - `insert_data.sql` - Sample data
 - `queries.sql` - Required queries
 - `ERD.png` - Chen notation diagram  
 - `design_reasoning.md` - Design documentation
+
+**Note:** The submission script automatically:
+1. Runs `dotnet clean` to remove most build artifacts
+2. Copies all required files to a temporary directory
+3. Completely removes bin/obj directories using `rm -rf`
+4. Creates a properly named zip file for Brightspace submission
 
 ### Pre-Submission Checklist
 - [ ] Web API builds without errors
@@ -179,6 +186,13 @@ chmod +x prepare_submission.sh
 2. **Deadline**: Submit before deadline - late submissions receive grade 0
 3. **Demo Day**: Be prepared to run solution and explain any part
 4. **File Format**: Submit as .zip only (not .rar, .7z, etc.)
+
+## About `dotnet clean`
+
+The `dotnet clean` command removes most build artifacts but may leave some files in bin/obj directories. The prepare_submission.sh script handles this by:
+- First running `dotnet clean` to remove compiled binaries
+- Then using `rm -rf` to completely remove bin and obj directories
+- This ensures the submission package is fully cleaned
 
 ## Support
 
