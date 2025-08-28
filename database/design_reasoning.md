@@ -1,62 +1,59 @@
 # Database Design Reasoning for Experience Share App
 
 ## Core Design Principle
-The database implements a seven-table relational model in Third Normal Form (3NF) that enables group travel organization with individual booking responsibilities and volume-based discounts.
+The database uses a relational model in Third Normal Form (3NF) to support group travel organization, individual booking responsibilities, and volume-based discounts.
 
 ## Entity Structure and Relationships
 
 ### Provider and Guest Entities
-**Provider** stores business partners with four mandatory fields: Name, Address, Phone, and CVR (Danish business registration number). The CVR field ensures compliance with Danish business requirements as specified.
-
-**Guest** represents platform users with Name, Age (CHECK constraint ≥18 for legal responsibility), Phone, and PersonalID (UNIQUE constraint preventing duplicate registrations). The age restriction implements the adult-only requirement mentioned in the informal specifications.
+*   **Provider:** Stores business partners. Fields include Name, Address, Phone, and CVR (the Danish business registration number), as required.
+*   **Guest:** Represents platform users. Fields include Name, Age (with a `CHECK` constraint for ≥18), Phone, and PersonalID (with a `UNIQUE` constraint). The age constraint enforces the application's adult-only requirement.
 
 ### Experience and Pricing
-**Experience** links to exactly one Provider through a foreign key with CASCADE DELETE. The Price field uses DECIMAL(10,2) as explicitly required by the assignment for Transact-SQL monetary representation. The CHECK constraint (Price ≥ 0) prevents data entry errors. Description is the only nullable field in the schema.
+*   **Experience:** Links to a `Provider` via a foreign key with `CASCADE DELETE`. The `Price` field is `DECIMAL(10,2)` per assignment requirements for Transact-SQL. A `CHECK` constraint ensures `Price` is non-negative. `Description` is the only nullable field.
 
 ### Group Event Architecture
-**SharedExperience** contains Name, Date, and OrganizerID (foreign key to Guest). This represents group events like "Trip to Austria" that Star describes in the requirements.
-
-**SharedExperienceItem** is a junction table with a composite unique constraint on (SharedExperienceID, ExperienceID), preventing duplicate experience additions to a shared event. This enables the many-to-many relationship between shared experiences and available experiences.
-
-**Booking** connects guests to specific experiences within a shared experience by referencing SharedExperienceItem, not Experience directly. The unique constraint on (GuestID, SharedExperienceItemID) prevents double bookings. BookingDate uses GETDATE() default for automatic timestamping.
+*   **SharedExperience:** Models group events organized by users, fulfilling Star's requirement. It contains Name, Date, and an `OrganizerID` foreign key referencing the `Guest` table.
+*   **SharedExperienceItem:** A junction table enabling the many-to-many relationship between `SharedExperience` and `Experience`. A composite `UNIQUE` constraint on `(SharedExperienceID, ExperienceID)` prevents adding the same experience to an event multiple times.
+*   **Booking:** Connects a `Guest` to an experience within a shared event by referencing `SharedExperienceItem`. A `UNIQUE` constraint on `(GuestID, SharedExperienceItemID)` prevents duplicate bookings. The `BookingDate` field defaults to `GETDATE()` for timestamping.
 
 ### Discount Implementation
-**Discount** implements Noah's volume discount requirement with MinGuests (CHECK > 0) and DiscountPercentage (DECIMAL(5,2) with CHECK 0-100). Multiple rows per provider enable tiered discounts: 10% at 10 guests, 20% at 50 guests.
+*   **Discount:** Implements Noah's volume discount requirement. It contains `MinGuests` and `DiscountPercentage` fields, both with `CHECK` constraints. Allowing multiple discount rows per provider enables tiered pricing (e.g., 10% for 10 guests, 20% for 50).
 
 ## Key Design Decisions
 
 ### Three-Level Booking Structure
-The path SharedExperience → SharedExperienceItem → Booking (rather than direct Guest-Experience links) captures the context required by queries 4-6: which guests booked which experiences within which shared event. This satisfies Star's requirement that guests "travel as a group" while maintaining "individual responsibilities."
+The `SharedExperience` → `SharedExperienceItem` → `Booking` structure is used instead of a direct Guest-Experience link. This model captures the necessary context for queries 4-6 (e.g., guests per experience *within a specific event*) and fulfills Star's requirement for group travel with individual booking responsibility.
 
 ### Referential Integrity
-CASCADE DELETE on all foreign keys maintains consistency: deleting a provider removes their experiences, related shared experience items, and bookings automatically. This prevents orphaned records.
+`CASCADE DELETE` is used on foreign keys to maintain referential integrity and prevent orphaned records. For example, deleting a provider also removes their associated experiences and bookings.
 
 ### Indexing Strategy
-Seven indexes on all foreign key columns optimize the JOIN operations required by the 10 mandatory queries. Primary keys use IDENTITY(1,1) for efficient clustered indexes.
+Indexes are created on all foreign key columns to optimize `JOIN` performance for the required queries. Primary keys use `IDENTITY(1,1)` to create clustered indexes.
 
 ## Query Support Verification
 
 The schema directly supports all required queries:
-1. Provider data retrieval - direct SELECT from Provider table
-2. Experience listing with prices - direct SELECT from Experience table
-3. Shared experiences by date - SELECT from SharedExperience with ORDER BY Date DESC
-4. Guests per shared experience - JOIN path through Booking → SharedExperienceItem → SharedExperience
-5. Experiences in shared experience - JOIN through SharedExperienceItem
-6. Guests per specific experience in shared experience - full JOIN chain with experience name filter
-7. Price statistics - aggregate functions on Experience.Price
-8. Guest counts and sales - COUNT and SUM with LEFT JOINs to include zero bookings
-9. Discount thresholds - JOIN Provider with Discount
-10. Applicable discounts - complex query with CTEs using the indexed relationships
+1.  **Provider data:** `SELECT` from the `Provider` table.
+2.  **Experience list:** `SELECT` from the `Experience` table.
+3.  **Shared experiences by date:** `SELECT` from `SharedExperience` with `ORDER BY Date DESC`.
+4.  **Guests per shared experience:** `JOIN` through `Booking` → `SharedExperienceItem` → `SharedExperience`.
+5.  **Experiences in shared experience:** `JOIN` through `SharedExperienceItem`.
+6.  **Guests per specific experience in a shared experience:** Full `JOIN` chain with a filter.
+7.  **Price statistics:** Aggregate functions on `Experience.Price`.
+8.  **Guest counts and sales:** `COUNT` and `SUM` aggregates with `LEFT JOINs`.
+9.  **Discount thresholds:** `JOIN` between `Provider` and `Discount`.
+10. **Applicable discounts:** Complex query utilizing the indexed relationships.
 
 ## Normalization Compliance
 
 The schema achieves 3NF:
-- 1NF: All fields contain atomic values, no repeating groups
-- 2NF: No partial dependencies (no composite primary keys with partial dependencies)
-- 3NF: No transitive dependencies (each non-key field depends only on the primary key)
+*   **1NF:** All fields contain atomic values.
+*   **2NF:** No partial dependencies exist.
+*   **3NF:** No transitive dependencies exist.
 
-No denormalization was introduced. Calculated values (total sales, applicable discounts) are computed at query time to prevent update anomalies.
+Calculated values (e.g., total sales) are computed at query time to prevent update anomalies.
 
 ## Conclusion
 
-This design precisely implements the requirements from Zoe (provider/guest data storage), Noah (volume discounts), and Star (group organization with individual bookings). The normalized structure with comprehensive indexing ensures data integrity while supporting efficient query execution for all specified operations.
+This design implements the requirements from Zoe (provider/guest data), Noah (volume discounts), and Star (group organization with individual bookings). The normalized structure ensures data integrity and supports the query performance needed for all specified operations.
