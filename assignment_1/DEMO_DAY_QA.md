@@ -56,45 +56,45 @@ I used the `required` modifier to avoid nullable warnings and `decimal?` to matc
 **A:** I chose a multi-stage build to minimize the final image size. The build tools and SDK are about 800MB but I only need them during compilation. My final image only contains the ASP.NET runtime (~200MB) and my compiled application, which reduces both deployment size and attack surface.
 
 ### Q: What is the purpose of the build stage?
-**A:** In lines 1-8, I set up the build stage where I compile the C# code. I use the .NET SDK image to:
-- Restore NuGet packages with `dotnet restore`
-- Build the application with `dotnet build`
-- Publish production binaries with `dotnet publish`
+**A:** In lines 4-17, I set up the build stage where I compile the C# code. I use the .NET SDK image to:
+- Restore NuGet packages with `dotnet restore` (line 9)
+- Build the application with `dotnet build` (line 13)
+- Publish production binaries with `dotnet publish` (line 17)
 
 ### Q: What is the purpose of the final stage?
-**A:** In lines 9-14, I create the production runtime image. I:
-- Use the lightweight ASP.NET runtime image (not the SDK)
-- Copy only the published binaries from my build stage
-- Set the working directory and expose port 8080
-- Configure the entry point to start my application
+**A:** In lines 20-31, I create the production runtime image. I:
+- Use the lightweight ASP.NET runtime image (not the SDK) (line 20)
+- Copy only the published binaries from my build stage (line 25)
+- Set the working directory and expose port 8080 (lines 21-22)
+- Configure the entry point to start my application (line 31)
 
 ### Q: What does this specific line do?
 
-**Line 1:** `FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build`
+**Line 4:** `FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build`
 - I pull the official .NET 8.0 SDK Docker image
 - I name this stage "build" for later reference
 
-**Line 3:** `COPY ["WebAPI.csproj", "./"]`
+**Line 8:** `COPY ["WebAPI.csproj", "./"]`
 - I copy only the project file first
 - This enables Docker layer caching since dependencies change less than code
 
-**Line 4:** `RUN dotnet restore "WebAPI.csproj"`
+**Line 9:** `RUN dotnet restore "WebAPI.csproj"`
 - I download NuGet package dependencies
 - This creates a separate cacheable layer
 
-**Line 8:** `RUN dotnet publish "WebAPI.csproj" -c Release -o /app/publish`
+**Line 17:** `RUN dotnet publish "WebAPI.csproj" -c Release -o /app/publish`
 - I compile in Release configuration
 - I output production-ready binaries to /app/publish
 
-**Line 12:** `COPY --from=publish /app/publish .`
-- I copy compiled binaries from the build stage
+**Line 25:** `COPY --from=publish /app/publish .`
+- I copy compiled binaries from the publish stage
 - I only include necessary runtime files, not source code
 
-**Line 13:** `ENV ASPNETCORE_URLS=http://+:8080`
+**Line 28:** `ENV ASPNETCORE_URLS=http://+:8080`
 - I configure ASP.NET to listen on all interfaces port 8080
 - This is required for container networking
 
-**Line 14:** `ENTRYPOINT ["dotnet", "WebAPI.dll"]`
+**Line 31:** `ENTRYPOINT ["dotnet", "WebAPI.dll"]`
 - I define the command to start my application
 - This runs when the container starts
 
