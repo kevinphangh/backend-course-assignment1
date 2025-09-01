@@ -10,7 +10,7 @@ DELETE FROM dbo.Guest;
 DELETE FROM dbo.Provider;
 GO
 
--- Reset identity counters
+-- Reset identity counters (on SQL Server 2022 Linux, RESEED 0 starts from 0)
 DBCC CHECKIDENT ('dbo.Provider', RESEED, 0);
 DBCC CHECKIDENT ('dbo.Guest', RESEED, 0);
 DBCC CHECKIDENT ('dbo.Experience', RESEED, 0);
@@ -41,52 +41,52 @@ INSERT INTO dbo.Guest (Name, Age, Phone, PersonalID) VALUES
 ('Emma', 31, '+45 90102030', 'DK890123');
 GO
 
--- Experiences (linked to providers by ProviderID)
+-- Experiences (ProviderIDs start from 0 on SQL Server 2022 Linux)
 INSERT INTO dbo.Experience (ProviderID, Name, Description, Price) VALUES
-(1, 'Night at Noah''s Hotel Single room', 'Comfortable single room accommodation', 730.50),
-(1, 'Night at Noah''s Hotel Double room', 'Spacious double room accommodation', 910.99),
-(2, 'Flight AAR - VIE', 'Round trip flight from Aarhus to Vienna', 1000.70),
-(3, 'Vienna Historic Center Walking Tour', 'Guided tour through Vienna''s historic center', 100.00),
-(4, 'Dinner Downtown', 'Three-course dinner at Downtown Restaurant', 250.00),
-(5, 'Pottery Weekend Workshop', 'Two-day pottery workshop with materials included', 450.00);
+(0, 'Night at Noah''s Hotel Single room', 'Comfortable single room accommodation', 730.50),
+(0, 'Night at Noah''s Hotel Double room', 'Spacious double room accommodation', 910.99),
+(1, 'Flight AAR - VIE', 'Round trip flight from Aarhus to Vienna', 1000.70),
+(2, 'Vienna Historic Center Walking Tour', 'Guided tour through Vienna''s historic center', 100.00),
+(3, 'Dinner Downtown', 'Three-course dinner at Downtown Restaurant', 250.00),
+(4, 'Pottery Weekend Workshop', 'Two-day pottery workshop with materials included', 450.00);
 GO
 
--- Shared Experiences (group trips/events)
+-- Shared Experiences (GuestIDs start from 0)
 INSERT INTO dbo.SharedExperience (Name, Date, OrganizerID) VALUES
-('Trip to Austria', '2024-07-02', 1),  -- Joan organizes
-('Dinner Downtown', '2024-04-07', 5),  -- Michael organizes
-('Pottery Weekend', '2024-03-22', 6);  -- Sarah organizes
+('Trip to Austria', '2024-07-02', 0),  -- Joan (GuestID 0) organizes
+('Dinner Downtown', '2024-04-07', 4),  -- Michael (GuestID 4) organizes
+('Pottery Weekend', '2024-03-22', 5);  -- Sarah (GuestID 5) organizes
 GO
 
--- Link experiences to trips
+-- Link experiences to trips (IDs start from 0)
 INSERT INTO dbo.SharedExperienceItem (SharedExperienceID, ExperienceID) VALUES
-(1, 3),  -- Austria trip: Flight
-(1, 1),  -- Austria trip: Hotel single
-(1, 4),  -- Austria trip: Walking tour
-(2, 5),  -- Dinner: Restaurant
-(3, 6);  -- Pottery: Workshop
+(0, 2),  -- Austria trip (ID 0): Flight (ID 2)
+(0, 0),  -- Austria trip: Hotel single (ID 0)
+(0, 3),  -- Austria trip: Walking tour (ID 3)
+(1, 4),  -- Dinner (ID 1): Restaurant (ID 4)
+(2, 5);  -- Pottery (ID 2): Workshop (ID 5)
 GO
 
--- Individual bookings (selective participation)
+-- Individual bookings (all IDs start from 0)
 INSERT INTO dbo.Booking (GuestID, SharedExperienceItemID) VALUES
--- Austria trip bookings
-(1, 1), (1, 2), (1, 3),  -- Joan: all 3
-(2, 1), (2, 2), (2, 3),  -- Suzzane: all 3
-(3, 1), (3, 2),          -- Patrick: flight & hotel only
-(4, 1), (4, 2),          -- Anne: flight & hotel only
+-- Austria trip bookings (SharedExperienceItemIDs 0,1,2)
+(0, 0), (0, 1), (0, 2),  -- Joan (ID 0): all 3 items
+(1, 0), (1, 1), (1, 2),  -- Suzzane (ID 1): all 3
+(2, 0), (2, 1),          -- Patrick (ID 2): flight & hotel only
+(3, 0), (3, 1),          -- Anne (ID 3): flight & hotel only
 
--- Dinner bookings
-(5, 4), (6, 4), (7, 4),  -- Michael, Sarah, Thomas
+-- Dinner bookings (SharedExperienceItemID 3)
+(4, 3), (5, 3), (6, 3),  -- Michael, Sarah, Thomas
 
--- Workshop bookings
-(6, 5), (7, 5), (8, 5);  -- Sarah, Thomas, Emma
+-- Workshop bookings (SharedExperienceItemID 4)
+(5, 4), (6, 4), (7, 4);  -- Sarah, Thomas, Emma
 GO
 
--- Volume discounts per provider
+-- Volume discounts per provider (ProviderIDs start from 0)
 INSERT INTO dbo.Discount (ProviderID, MinGuests, DiscountPercentage) VALUES
-(1, 10, 10.00), (1, 50, 20.00),  -- Noah's Hotel
-(2, 5, 5.00), (2, 15, 12.00),     -- Austrian Airlines
-(3, 8, 15.00), (3, 20, 25.00);    -- Vienna Tours
+(0, 10, 10.00), (0, 50, 20.00),  -- Noah's Hotel (ID 0)
+(1, 5, 5.00), (1, 15, 12.00),     -- Austrian Airlines (ID 1)
+(2, 8, 15.00), (2, 20, 25.00);    -- Vienna Tours (ID 2)
 GO
 
 PRINT 'Sample data inserted successfully!';

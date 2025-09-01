@@ -75,17 +75,25 @@ docker run -p 8080:8080 experience-share-api
 
 ### Database Setup
 
-```sql
--- 1. Create database
-CREATE DATABASE ExperienceShareDB;
-GO
-USE ExperienceShareDB;
-GO
+```bash
+# Using Docker container
+docker exec experience-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P YourStrong@Passw0rd123 -C \
+  -Q "CREATE DATABASE ExperienceShareDB"
 
--- 2. Execute scripts in order
--- Run: database/scripts/create_database.sql
--- Run: database/scripts/insert_data.sql  
--- Run: database/scripts/queries.sql (for testing)
+docker exec experience-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P YourStrong@Passw0rd123 -C \
+  -d ExperienceShareDB -i /scripts/create_database.sql
+
+docker exec experience-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P YourStrong@Passw0rd123 -C \
+  -d ExperienceShareDB -i /scripts/insert_data.sql
+
+# Or using local SQL Server
+sqlcmd -S localhost -C -Q "CREATE DATABASE ExperienceShareDB"
+sqlcmd -S localhost -C -d ExperienceShareDB -i database/scripts/create_database.sql
+sqlcmd -S localhost -C -d ExperienceShareDB -i database/scripts/insert_data.sql
+sqlcmd -S localhost -C -d ExperienceShareDB -i database/scripts/queries.sql
 ```
 
 ## API Specification
@@ -100,17 +108,17 @@ Returns available experiences as JSON array.
   {
     "name": "Night at Noah's Hotel Single room",
     "description": "Comfortable single room accommodation at Noah's Hotel",
-    "price": 730
+    "price": 730.5
   },
   {
     "name": "Night at Noah's Hotel Double room",
     "description": "Spacious double room accommodation at Noah's Hotel", 
-    "price": 910
+    "price": 910.99
   },
   {
     "name": "Vienna Historic Center Walking Tour",
     "description": "Guided walking tour through Vienna's historic center",
-    "price": 100
+    "price": 100.0
   }
 ]
 ```
@@ -179,6 +187,14 @@ chmod +x prepare_submission.sh
 - Docker (for containerization)
 - SQL Server 2022 or Azure Data Studio (for database)
 - Visual Studio 2022 or VS Code (recommended)
+
+## Important SQL Server 2022 Linux Notes
+
+When running on SQL Server 2022 Linux (including Docker containers):
+- **IDENTITY columns**: `DBCC CHECKIDENT` with `RESEED, 0` starts IDs from 0, not 1
+- **sqlcmd path**: Use `/opt/mssql-tools18/bin/sqlcmd` (not `/opt/mssql-tools/bin/sqlcmd`)
+- **Certificate flag**: Always use `-C` flag with sqlcmd for certificate trust
+- **Data types**: API models use `decimal?` to match database `DECIMAL(10,2)` for prices
 
 ## Important Notes
 
