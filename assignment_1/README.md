@@ -22,9 +22,26 @@ Experience Share App - A decentralized platform for organizing group experiences
 - Implements all 10 required queries
 - Comprehensive design reasoning document
 
-### ❌ Part D: Extra (Optional)
-- SQL connection endpoints not implemented
-- Docker Compose not configured
+### ⚠️ Part D: Extra (Optional - Partially Complete)
+- ❌ SQL connection endpoints not implemented (API returns hardcoded data)
+- ✅ Docker Compose configured (see docker-compose.yml)
+
+## Docker Compose Configuration
+
+The `docker-compose.yml` file provides:
+- **SQL Server 2022**: Port 1433, persistent data volume
+- **Web API**: Port 8080, depends on SQL Server health
+- **Network**: Internal bridge network for container communication
+- **Health Check**: Ensures SQL Server is ready before starting API
+- **Data Persistence**: Named volume `sqldata` survives container restarts
+
+Check container status:
+```bash
+docker ps                    # View running containers
+docker compose logs -f       # View logs (Ctrl+C to exit)
+docker compose down          # Stop all services
+docker compose down -v       # Stop and delete data volume
+```
 
 ## Project Structure
 
@@ -60,36 +77,75 @@ cd src/WebAPI
 dotnet build
 dotnet run
 
-# API available at http://localhost:5XXX/swagger
+# API available at http://localhost:5097/swagger
 ```
 
 ### Docker Deployment
 
+#### Option 1: Docker Compose (Recommended - Persistent Data)
+
 ```bash
+# Start both SQL Server and Web API with persistent storage
+# (from assignment_1 directory)
+docker compose up -d
+
+# Services available at:
+# - SQL Server: localhost:1433
+# - Web API: http://localhost:8080/swagger
+# - Data persists in Docker volume 'sqldata'
+
+# Stop services (data persists)
+docker compose down
+
+# Stop and remove data
+docker compose down -v
+```
+
+#### Option 2: Manual Docker Commands (Data NOT Persistent)
+
+```bash
+# 1. Start SQL Server first
+docker run -d --name experience-sqlserver \
+  -e "ACCEPT_EULA=Y" \
+  -e "MSSQL_SA_PASSWORD=YourStrong@Passw0rd123" \
+  -p 1433:1433 \
+  mcr.microsoft.com/mssql/server:2022-latest
+
+# 2. Wait 30 seconds for SQL Server to start, then build and run API
 cd src/WebAPI
 docker build -t experience-share-api .
-docker run -p 8080:8080 experience-share-api
+docker run -d --name experience-webapi -p 8080:8080 experience-share-api
 
-# Swagger UI at http://localhost:8080/swagger
+# ⚠️ WARNING: Data is stored inside container - will be lost if container is removed!
 ```
 
 ### Database Setup
 
+#### If Using Docker Compose
+Database must be initialized manually after containers start:
+
 ```bash
-# Using Docker container
+# Copy scripts to container
+docker cp database/scripts/create_database.sql experience-sqlserver:/tmp/
+docker cp database/scripts/insert_data.sql experience-sqlserver:/tmp/
+
+# Initialize database
 docker exec experience-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P YourStrong@Passw0rd123 -C \
   -Q "CREATE DATABASE ExperienceShareDB"
 
 docker exec experience-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P YourStrong@Passw0rd123 -C \
-  -d ExperienceShareDB -i /scripts/create_database.sql
+  -d ExperienceShareDB -i /tmp/create_database.sql
 
 docker exec experience-sqlserver /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P YourStrong@Passw0rd123 -C \
-  -d ExperienceShareDB -i /scripts/insert_data.sql
+  -d ExperienceShareDB -i /tmp/insert_data.sql
+```
 
-# Or using local SQL Server
+#### If Using Local SQL Server
+
+```bash
 sqlcmd -S localhost -C -Q "CREATE DATABASE ExperienceShareDB"
 sqlcmd -S localhost -C -d ExperienceShareDB -i database/scripts/create_database.sql
 sqlcmd -S localhost -C -d ExperienceShareDB -i database/scripts/insert_data.sql
