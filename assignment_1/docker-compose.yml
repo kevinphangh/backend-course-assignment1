@@ -1,7 +1,7 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: experience-sqlserver
+    container_name: localfood-sqlserver
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=YourStrong@Passw0rd123
@@ -18,13 +18,11 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - experience-network
+      - localfood-network
 
   webapi:
-    build: 
-      context: ./src/WebAPI
-      dockerfile: Dockerfile
-    container_name: experience-webapi
+    image: youruser/local-food-api:latest
+    container_name: local-food-webapi
     ports:
       - "8080:8080"
     depends_on:
@@ -32,13 +30,13 @@ services:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ExperienceShareDB;User Id=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=true
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=LocalFoodDB;User Id=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=true
     networks:
-      - experience-network
+      - localfood-network
 
 volumes:
   sqldata:
 
 networks:
-  experience-network:
+  localfood-network:
     driver: bridge

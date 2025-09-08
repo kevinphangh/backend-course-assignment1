@@ -1,105 +1,159 @@
--- Database schema for Experience Share App
+-- Database schema for Local Food Delivery App
 -- SQL Server 2022 / Transact-SQL
 
 -- Drop existing tables (in dependency order)
-IF OBJECT_ID('dbo.Booking', 'U') IS NOT NULL DROP TABLE dbo.Booking;
-IF OBJECT_ID('dbo.SharedExperienceItem', 'U') IS NOT NULL DROP TABLE dbo.SharedExperienceItem;
-IF OBJECT_ID('dbo.SharedExperience', 'U') IS NOT NULL DROP TABLE dbo.SharedExperience;
-IF OBJECT_ID('dbo.Discount', 'U') IS NOT NULL DROP TABLE dbo.Discount;
-IF OBJECT_ID('dbo.Experience', 'U') IS NOT NULL DROP TABLE dbo.Experience;
-IF OBJECT_ID('dbo.Guest', 'U') IS NOT NULL DROP TABLE dbo.Guest;
-IF OBJECT_ID('dbo.Provider', 'U') IS NOT NULL DROP TABLE dbo.Provider;
+IF OBJECT_ID('dbo.Rating', 'U') IS NOT NULL DROP TABLE dbo.Rating;
+IF OBJECT_ID('dbo.TripStop', 'U') IS NOT NULL DROP TABLE dbo.TripStop;
+IF OBJECT_ID('dbo.Trip', 'U') IS NOT NULL DROP TABLE dbo.Trip;
+IF OBJECT_ID('dbo.OrderItem', 'U') IS NOT NULL DROP TABLE dbo.OrderItem;
+IF OBJECT_ID('dbo.[Order]', 'U') IS NOT NULL DROP TABLE dbo.[Order];
+IF OBJECT_ID('dbo.Portion', 'U') IS NOT NULL DROP TABLE dbo.Portion;
+IF OBJECT_ID('dbo.Customer', 'U') IS NOT NULL DROP TABLE dbo.Customer;
+IF OBJECT_ID('dbo.Cyclist', 'U') IS NOT NULL DROP TABLE dbo.Cyclist;
+IF OBJECT_ID('dbo.Cook', 'U') IS NOT NULL DROP TABLE dbo.Cook;
 GO
 
--- Provider: Businesses offering services
-CREATE TABLE dbo.Provider (
-    ProviderID INT IDENTITY(1,1) PRIMARY KEY,
+-- Cook: Home kitchen cooks
+CREATE TABLE dbo.Cook (
+    CookID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
     Address NVARCHAR(500) NOT NULL,
     Phone NVARCHAR(50) NOT NULL,
-    CVR NVARCHAR(20) NOT NULL  -- Danish business registration
+    PersonalID NVARCHAR(50) NOT NULL UNIQUE
 );
 GO
 
--- Guest: Platform users
-CREATE TABLE dbo.Guest (
-    GuestID INT IDENTITY(1,1) PRIMARY KEY,
+-- Cyclist: Delivery gig workers
+CREATE TABLE dbo.Cyclist (
+    CyclistID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
-    Age INT NOT NULL CHECK (Age >= 18),  -- Adults only
     Phone NVARCHAR(50) NOT NULL,
-    PersonalID NVARCHAR(50) NOT NULL UNIQUE  -- Prevent duplicates
+    PersonalID NVARCHAR(50) NOT NULL UNIQUE,
+    BikeType NVARCHAR(100) NOT NULL
 );
 GO
 
--- Experience: Services offered by providers
-CREATE TABLE dbo.Experience (
-    ExperienceID INT IDENTITY(1,1) PRIMARY KEY,
-    ProviderID INT NOT NULL,
+-- Customer: App users ordering food
+CREATE TABLE dbo.Customer (
+    CustomerID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
-    Description NVARCHAR(1000),
-    Price DECIMAL(10,2) NOT NULL CHECK (Price >= 0),  -- Required decimal type for money
-    CONSTRAINT FK_Experience_Provider FOREIGN KEY (ProviderID) 
-        REFERENCES dbo.Provider(ProviderID) ON DELETE CASCADE
+    Address NVARCHAR(500) NOT NULL,
+    Phone NVARCHAR(50) NOT NULL,
+    PaymentOption NVARCHAR(20) NOT NULL CHECK (PaymentOption IN ('Card', 'MobilePay'))
 );
 GO
 
--- SharedExperience: Group trips/events
-CREATE TABLE dbo.SharedExperience (
-    SharedExperienceID INT IDENTITY(1,1) PRIMARY KEY,
+-- Portion: Available dishes/portions from cooks
+CREATE TABLE dbo.Portion (
+    PortionID INT IDENTITY(1,1) PRIMARY KEY,
+    CookID INT NOT NULL,
     Name NVARCHAR(255) NOT NULL,
-    Date DATE NOT NULL,
-    OrganizerID INT NOT NULL,
-    CONSTRAINT FK_SharedExperience_Organizer FOREIGN KEY (OrganizerID) 
-        REFERENCES dbo.Guest(GuestID)
+    Quantity INT NOT NULL CHECK (Quantity > 0),
+    Price INT NOT NULL CHECK (Price > 0),
+    AvailableFrom TIME NOT NULL,
+    AvailableUntil TIME NOT NULL,
+    CONSTRAINT FK_Portion_Cook FOREIGN KEY (CookID) 
+        REFERENCES dbo.Cook(CookID) ON DELETE CASCADE,
+    CONSTRAINT CHK_TimeInterval CHECK (AvailableUntil > AvailableFrom)
 );
 GO
 
--- SharedExperienceItem: Links experiences to trips (M:N junction)
-CREATE TABLE dbo.SharedExperienceItem (
-    SharedExperienceItemID INT IDENTITY(1,1) PRIMARY KEY,
-    SharedExperienceID INT NOT NULL,
-    ExperienceID INT NOT NULL,
-    CONSTRAINT FK_SEItem_SharedExperience FOREIGN KEY (SharedExperienceID) 
-        REFERENCES dbo.SharedExperience(SharedExperienceID) ON DELETE CASCADE,
-    CONSTRAINT FK_SEItem_Experience FOREIGN KEY (ExperienceID) 
-        REFERENCES dbo.Experience(ExperienceID) ON DELETE CASCADE,
-    CONSTRAINT UQ_SharedExperienceItem UNIQUE (SharedExperienceID, ExperienceID)
+-- Order: Customer orders
+CREATE TABLE dbo.[Order] (
+    OrderID INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    OrderDate DATETIME NOT NULL DEFAULT GETDATE(),
+    TotalAmount INT NOT NULL CHECK (TotalAmount >= 0),
+    CONSTRAINT FK_Order_Customer FOREIGN KEY (CustomerID) 
+        REFERENCES dbo.Customer(CustomerID) ON DELETE CASCADE
 );
 GO
 
--- Booking: Guest registrations for experiences (M:N junction)
-CREATE TABLE dbo.Booking (
-    BookingID INT IDENTITY(1,1) PRIMARY KEY,
-    GuestID INT NOT NULL,
-    SharedExperienceItemID INT NOT NULL,
-    BookingDate DATETIME DEFAULT GETDATE(),
-    CONSTRAINT FK_Booking_Guest FOREIGN KEY (GuestID) 
-        REFERENCES dbo.Guest(GuestID) ON DELETE CASCADE,
-    CONSTRAINT FK_Booking_SEItem FOREIGN KEY (SharedExperienceItemID) 
-        REFERENCES dbo.SharedExperienceItem(SharedExperienceItemID) ON DELETE CASCADE,
-    CONSTRAINT UQ_Booking UNIQUE (GuestID, SharedExperienceItemID)  -- No duplicate bookings
+-- OrderItem: Items in an order
+CREATE TABLE dbo.OrderItem (
+    OrderItemID INT IDENTITY(1,1) PRIMARY KEY,
+    OrderID INT NOT NULL,
+    PortionID INT NOT NULL,
+    CookID INT NOT NULL,
+    Quantity INT NOT NULL CHECK (Quantity > 0),
+    Price INT NOT NULL CHECK (Price >= 0),
+    CONSTRAINT FK_OrderItem_Order FOREIGN KEY (OrderID) 
+        REFERENCES dbo.[Order](OrderID) ON DELETE CASCADE,
+    CONSTRAINT FK_OrderItem_Portion FOREIGN KEY (PortionID) 
+        REFERENCES dbo.Portion(PortionID),
+    CONSTRAINT FK_OrderItem_Cook FOREIGN KEY (CookID) 
+        REFERENCES dbo.Cook(CookID)
 );
 GO
 
--- Discount: Volume-based pricing
-CREATE TABLE dbo.Discount (
-    DiscountID INT IDENTITY(1,1) PRIMARY KEY,
-    ProviderID INT NOT NULL,
-    MinGuests INT NOT NULL CHECK (MinGuests > 0),
-    DiscountPercentage DECIMAL(5,2) NOT NULL CHECK (DiscountPercentage >= 0 AND DiscountPercentage <= 100),
-    CONSTRAINT FK_Discount_Provider FOREIGN KEY (ProviderID) 
-        REFERENCES dbo.Provider(ProviderID) ON DELETE CASCADE
+-- Trip: Delivery trips for cyclists
+CREATE TABLE dbo.Trip (
+    TripID INT IDENTITY(1,1) PRIMARY KEY,
+    CyclistID INT NOT NULL,
+    OrderID INT NOT NULL,
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NULL,
+    Earnings INT NOT NULL CHECK (Earnings >= 0),
+    CONSTRAINT FK_Trip_Cyclist FOREIGN KEY (CyclistID) 
+        REFERENCES dbo.Cyclist(CyclistID) ON DELETE CASCADE,
+    CONSTRAINT FK_Trip_Order FOREIGN KEY (OrderID) 
+        REFERENCES dbo.[Order](OrderID)
 );
 GO
 
--- Create indexes for foreign keys (improves JOIN performance)
-CREATE INDEX IX_Experience_ProviderID ON dbo.Experience(ProviderID);
-CREATE INDEX IX_SharedExperience_OrganizerID ON dbo.SharedExperience(OrganizerID);
-CREATE INDEX IX_SharedExperienceItem_SharedExperienceID ON dbo.SharedExperienceItem(SharedExperienceID);
-CREATE INDEX IX_SharedExperienceItem_ExperienceID ON dbo.SharedExperienceItem(ExperienceID);
-CREATE INDEX IX_Booking_GuestID ON dbo.Booking(GuestID);
-CREATE INDEX IX_Booking_SharedExperienceItemID ON dbo.Booking(SharedExperienceItemID);
-CREATE INDEX IX_Discount_ProviderID ON dbo.Discount(ProviderID);
+-- TripStop: Pickup and delivery addresses for a trip
+CREATE TABLE dbo.TripStop (
+    TripStopID INT IDENTITY(1,1) PRIMARY KEY,
+    TripID INT NOT NULL,
+    Address NVARCHAR(500) NOT NULL,
+    StopTime TIME NOT NULL,
+    StopType NVARCHAR(20) NOT NULL CHECK (StopType IN ('Pickup', 'Delivery')),
+    StopOrder INT NOT NULL,
+    CONSTRAINT FK_TripStop_Trip FOREIGN KEY (TripID) 
+        REFERENCES dbo.Trip(TripID) ON DELETE CASCADE
+);
 GO
 
-PRINT 'Database schema created successfully!';
+-- Rating: Customer ratings for food and delivery
+CREATE TABLE dbo.Rating (
+    RatingID INT IDENTITY(1,1) PRIMARY KEY,
+    OrderID INT NOT NULL,
+    CookID INT NULL,
+    CyclistID INT NULL,
+    FoodRating INT NULL CHECK (FoodRating BETWEEN 1 AND 5),
+    DeliveryRating INT NULL CHECK (DeliveryRating BETWEEN 1 AND 5),
+    RatingDate DATETIME NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT FK_Rating_Order FOREIGN KEY (OrderID) 
+        REFERENCES dbo.[Order](OrderID) ON DELETE CASCADE,
+    CONSTRAINT FK_Rating_Cook FOREIGN KEY (CookID) 
+        REFERENCES dbo.Cook(CookID),
+    CONSTRAINT FK_Rating_Cyclist FOREIGN KEY (CyclistID) 
+        REFERENCES dbo.Cyclist(CyclistID),
+    CONSTRAINT CHK_AtLeastOneRating CHECK (FoodRating IS NOT NULL OR DeliveryRating IS NOT NULL)
+);
+GO
+
+-- Create indexes for foreign keys and common queries
+CREATE INDEX IX_Portion_CookID ON dbo.Portion(CookID);
+CREATE INDEX IX_Order_CustomerID ON dbo.[Order](CustomerID);
+CREATE INDEX IX_OrderItem_OrderID ON dbo.OrderItem(OrderID);
+CREATE INDEX IX_OrderItem_PortionID ON dbo.OrderItem(PortionID);
+CREATE INDEX IX_Trip_CyclistID ON dbo.Trip(CyclistID);
+CREATE INDEX IX_Trip_OrderID ON dbo.Trip(OrderID);
+CREATE INDEX IX_TripStop_TripID ON dbo.TripStop(TripID);
+CREATE INDEX IX_Rating_OrderID ON dbo.Rating(OrderID);
+CREATE INDEX IX_Rating_CookID ON dbo.Rating(CookID);
+CREATE INDEX IX_Rating_CyclistID ON dbo.Rating(CyclistID);
+GO
+
+-- Reset identity seeds for SQL Server 2022 Linux compatibility
+DBCC CHECKIDENT ('dbo.Cook', RESEED, 0);
+DBCC CHECKIDENT ('dbo.Cyclist', RESEED, 0);
+DBCC CHECKIDENT ('dbo.Customer', RESEED, 0);
+DBCC CHECKIDENT ('dbo.Portion', RESEED, 0);
+DBCC CHECKIDENT ('dbo.[Order]', RESEED, 0);
+DBCC CHECKIDENT ('dbo.OrderItem', RESEED, 0);
+DBCC CHECKIDENT ('dbo.Trip', RESEED, 0);
+DBCC CHECKIDENT ('dbo.TripStop', RESEED, 0);
+DBCC CHECKIDENT ('dbo.Rating', RESEED, 0);
+GO

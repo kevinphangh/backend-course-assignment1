@@ -1,138 +1,104 @@
--- Required queries for Experience Share App
+-- Required queries for Local Food Delivery App
 
--- Query 1: Get provider data
-SELECT Address, Phone, CVR 
-FROM dbo.Provider 
-WHERE Name = 'Noah''s Hotel';
+-- Query 1: Get the data collected for each cook
+-- Example for Noah's Kitchen
+SELECT Address, Phone, PersonalID
+FROM dbo.Cook
+WHERE Name = 'Noah''s Kitchen';
 GO
 
--- Query 2: List experiences with price
-SELECT Name, Price 
-FROM dbo.Experience 
+-- Query 2: Available portion name, quantity, price, and time interval for a Kitchen
+-- Example for Noah's Kitchen
+SELECT p.Name, p.Quantity, p.Price, 
+       CONVERT(VARCHAR(5), p.AvailableFrom, 108) AS AvailableFrom,
+       CONVERT(VARCHAR(5), p.AvailableUntil, 108) AS AvailableUntil
+FROM dbo.Portion p
+INNER JOIN dbo.Cook c ON p.CookID = c.CookID
+WHERE c.Name = 'Noah''s Kitchen'
+ORDER BY p.Name;
+GO
+
+-- Query 3: Get the list of goods and the provider kitchen in an order
+-- Example for Order 42
+SELECT oi.Quantity, p.Name AS PortionName, c.Name AS Kitchen
+FROM dbo.OrderItem oi
+INNER JOIN dbo.Portion p ON oi.PortionID = p.PortionID
+INNER JOIN dbo.Cook c ON oi.CookID = c.CookID
+WHERE oi.OrderID = 0  -- OrderID 0 is Order #42 in our 0-based system
+ORDER BY p.Name;
+GO
+
+-- Query 4: Get the trip for a cyclist
+-- Example for Trip ID 52 (TripID = 0 in our 0-based system)
+SELECT ts.Address,
+       CONVERT(VARCHAR(5), ts.StopTime, 108) AS StopTime,
+       ts.StopType
+FROM dbo.TripStop ts
+WHERE ts.TripID = 0  -- TripID 0 is Trip #52
+ORDER BY ts.StopOrder;
+GO
+
+-- Query 5: Get the average rating for a cook
+-- Example for Noah
+SELECT CAST(AVG(CAST(r.FoodRating AS FLOAT)) AS DECIMAL(2,1)) AS AverageRating
+FROM dbo.Rating r
+INNER JOIN dbo.Cook c ON r.CookID = c.CookID
+WHERE c.Name = 'Noah''s Kitchen'
+  AND r.FoodRating IS NOT NULL;
+GO
+
+-- Query 6: Get the monthly hours and earning for a cyclist
+-- Example for Star
+SELECT 
+    DATENAME(MONTH, t.StartTime) AS Month,
+    SUM(DATEDIFF(MINUTE, t.StartTime, t.EndTime)) / 60 AS Hours,
+    SUM(t.Earnings) AS Earnings
+FROM dbo.Trip t
+INNER JOIN dbo.Cyclist c ON t.CyclistID = c.CyclistID
+WHERE c.Name = 'Star'
+  AND YEAR(t.StartTime) = 2024
+  AND t.EndTime IS NOT NULL
+GROUP BY MONTH(t.StartTime), DATENAME(MONTH, t.StartTime)
+ORDER BY MONTH(t.StartTime);
+GO
+
+-- Query 7: Custom query - Get cyclist data (phone, ID, bike type)
+-- Shows all cyclists with their details
+SELECT Name, Phone, PersonalID, BikeType
+FROM dbo.Cyclist
 ORDER BY Name;
 GO
 
--- Query 3: List shared experiences DESC by date
-SELECT Name, CONVERT(VARCHAR(10), Date, 120) AS Date  -- Format: YYYY-MM-DD
-FROM dbo.SharedExperience 
-ORDER BY Date DESC;
+-- Additional useful queries for completeness:
+
+-- Get customer data
+SELECT Name, Address, Phone, PaymentOption
+FROM dbo.Customer
+WHERE Name = 'Knuth';
 GO
 
--- Query 4: Get guests for shared experience
-SELECT DISTINCT g.Name 
-FROM dbo.Guest g
-    INNER JOIN dbo.Booking b ON g.GuestID = b.GuestID
-    INNER JOIN dbo.SharedExperienceItem sei ON b.SharedExperienceItemID = sei.SharedExperienceItemID
-    INNER JOIN dbo.SharedExperience se ON sei.SharedExperienceID = se.SharedExperienceID
-WHERE se.Name = 'Trip to Austria'
-ORDER BY g.Name;
+-- Get top-rated cooks
+SELECT c.Name AS Cook, 
+       AVG(CAST(r.FoodRating AS FLOAT)) AS AverageRating,
+       COUNT(r.FoodRating) AS NumberOfRatings
+FROM dbo.Cook c
+LEFT JOIN dbo.Rating r ON c.CookID = r.CookID
+WHERE r.FoodRating IS NOT NULL
+GROUP BY c.CookID, c.Name
+HAVING COUNT(r.FoodRating) > 0
+ORDER BY AverageRating DESC;
 GO
 
--- Query 5: Get experiences in shared experience
-SELECT DISTINCT e.Name 
-FROM dbo.Experience e
-    INNER JOIN dbo.SharedExperienceItem sei ON e.ExperienceID = sei.ExperienceID
-    INNER JOIN dbo.SharedExperience se ON sei.SharedExperienceID = se.SharedExperienceID
-WHERE se.Name = 'Trip to Austria'
-ORDER BY e.Name;
+-- Get cyclist performance metrics
+SELECT c.Name AS Cyclist,
+       COUNT(t.TripID) AS TotalTrips,
+       SUM(DATEDIFF(MINUTE, t.StartTime, t.EndTime)) / 60.0 AS TotalHours,
+       SUM(t.Earnings) AS TotalEarnings,
+       AVG(r.DeliveryRating) AS AverageDeliveryRating
+FROM dbo.Cyclist c
+LEFT JOIN dbo.Trip t ON c.CyclistID = t.CyclistID
+LEFT JOIN dbo.Rating r ON c.CyclistID = r.CyclistID
+WHERE t.EndTime IS NOT NULL
+GROUP BY c.CyclistID, c.Name
+ORDER BY TotalEarnings DESC;
 GO
-
--- Query 6: Get guests for specific experience in shared experience
-SELECT g.Name 
-FROM dbo.Guest g
-    INNER JOIN dbo.Booking b ON g.GuestID = b.GuestID
-    INNER JOIN dbo.SharedExperienceItem sei ON b.SharedExperienceItemID = sei.SharedExperienceItemID
-    INNER JOIN dbo.Experience e ON sei.ExperienceID = e.ExperienceID
-    INNER JOIN dbo.SharedExperience se ON sei.SharedExperienceID = se.SharedExperienceID
-WHERE se.Name = 'Trip to Austria' 
-    AND e.Name = 'Vienna Historic Center Walking Tour'
-ORDER BY g.Name;
-GO
-
--- Alternative for hotel booking
-SELECT g.Name 
-FROM dbo.Guest g
-    INNER JOIN dbo.Booking b ON g.GuestID = b.GuestID
-    INNER JOIN dbo.SharedExperienceItem sei ON b.SharedExperienceItemID = sei.SharedExperienceItemID
-    INNER JOIN dbo.Experience e ON sei.ExperienceID = e.ExperienceID
-    INNER JOIN dbo.SharedExperience se ON sei.SharedExperienceID = se.SharedExperienceID
-WHERE se.Name = 'Trip to Austria' 
-    AND e.Name = 'Night at Noah''s Hotel Single room'
-ORDER BY g.Name;
-GO
-
--- Query 7: Get min/avg/max prices
-SELECT 
-    CAST(MIN(Price) AS DECIMAL(10,2)) AS MinPrice,
-    CAST(AVG(Price) AS DECIMAL(10,4)) AS AvgPrice,
-    CAST(MAX(Price) AS DECIMAL(10,2)) AS MaxPrice
-FROM dbo.Experience;
-GO
-
--- Query 8: Get guest count and sales sum per experience
-SELECT 
-    e.Name,
-    COUNT(b.BookingID) AS NumberOfGuests,
-    CAST(COUNT(b.BookingID) * e.Price AS DECIMAL(10,2)) AS TotalSales
-FROM dbo.Experience e
-    LEFT JOIN dbo.SharedExperienceItem sei ON e.ExperienceID = sei.ExperienceID
-    LEFT JOIN dbo.Booking b ON sei.SharedExperienceItemID = b.SharedExperienceItemID
-GROUP BY e.ExperienceID, e.Name, e.Price
-ORDER BY e.Name;
-GO
-
--- Query 9: Show discount thresholds
-SELECT 
-    p.Name AS ProviderName,
-    d.MinGuests AS RequiredGroupSize,
-    CAST(d.DiscountPercentage AS VARCHAR(10)) + '%' AS DiscountOffered,
-    CASE 
-        WHEN d.MinGuests <= 10 THEN 'Small Group Discount'
-        WHEN d.MinGuests <= 20 THEN 'Medium Group Discount'
-        ELSE 'Large Group Discount'
-    END AS DiscountTier
-FROM dbo.Provider p
-    INNER JOIN dbo.Discount d ON p.ProviderID = d.ProviderID
-ORDER BY p.Name, d.MinGuests;
-GO
-
--- Query 10: Calculate applicable discounts based on bookings
-WITH BookingCounts AS (
-    SELECT 
-        e.ExperienceID,
-        e.Name AS ExperienceName,
-        p.Name AS ProviderName,
-        e.Price,
-        COUNT(DISTINCT b.GuestID) AS CurrentGuests
-    FROM dbo.Experience e
-        INNER JOIN dbo.Provider p ON e.ProviderID = p.ProviderID
-        LEFT JOIN dbo.SharedExperienceItem sei ON e.ExperienceID = sei.ExperienceID
-        LEFT JOIN dbo.Booking b ON sei.SharedExperienceItemID = b.SharedExperienceItemID
-    GROUP BY e.ExperienceID, e.Name, p.Name, e.Price
-),
-ApplicableDiscounts AS (
-    SELECT 
-        bc.ExperienceName,
-        bc.ProviderName,
-        bc.Price AS OriginalPrice,
-        bc.CurrentGuests,
-        MAX(d.DiscountPercentage) AS ApplicableDiscount
-    FROM BookingCounts bc
-        INNER JOIN dbo.Provider p ON bc.ProviderName = p.Name
-        LEFT JOIN dbo.Discount d ON p.ProviderID = d.ProviderID 
-            AND bc.CurrentGuests >= d.MinGuests
-    GROUP BY bc.ExperienceName, bc.ProviderName, bc.Price, bc.CurrentGuests
-)
-SELECT 
-    ExperienceName,
-    ProviderName,
-    CurrentGuests,
-    CAST(OriginalPrice AS DECIMAL(10,2)) AS OriginalPrice,
-    ISNULL(ApplicableDiscount, 0) AS DiscountPercentage,
-    CAST(OriginalPrice * (1 - ISNULL(ApplicableDiscount, 0) / 100) AS DECIMAL(10,2)) AS DiscountedPrice
-FROM ApplicableDiscounts
-WHERE CurrentGuests > 0
-ORDER BY ProviderName, ExperienceName;
-GO
-
-PRINT 'All queries executed successfully!';
