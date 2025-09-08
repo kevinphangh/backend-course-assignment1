@@ -13,7 +13,7 @@ Local Food Delivery App - A platform connecting home kitchen cooks with customer
 ### ✅ Part B: Containerization  
 - Multi-stage Dockerfile for optimized container builds
 - Runs on port 8080 in container environment
-- Build command: `docker build -t webapi .`
+- Build command: `cd src/WebAPI && docker build -t kevinphangh/local-food-api:latest .`
 
 ### ✅ Part C: Docker Hub Integration
 - Docker Compose configured to pull from Docker Hub
