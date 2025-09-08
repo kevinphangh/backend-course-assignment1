@@ -1,62 +1,57 @@
-# Database Design Reasoning for Experience Share App
+# Database Design Reasoning for Local Food Delivery App
 
-## Core Design Principle
-I went with a relational model in Third Normal Form (3NF) since I need to handle group travel organization, individual booking responsibilities, and volume-based discounts. SQL Server made sense here given the requirements.
+## My Design Approach
 
-## Entity Structure and Relationships
+When I analyzed the requirements from Zoe, Noah, Star, and Knuth, I realized I needed to design a system that connects three different user types: cooks who prepare food, cyclists who deliver it, and customers who order it. I approached this by first identifying the core entities from their stories, then determining how these entities relate to each other.
 
-### Provider and Guest Entities
-For Provider I'm storing the business partners with their Name, Address, Phone, and CVR (that's the Danish business registration number the assignment requires). Pretty standard stuff.
+## Core Entity Decisions
 
-The Guest table is for platform users - got Name, Age (with a CHECK constraint for 18+), Phone, and PersonalID (UNIQUE constraint on this one). Had to enforce the adult-only requirement from the specs, hence the age check.
+I identified nine main entities that form the backbone of my database design. I chose to create separate tables for Cook, Cyclist, and Customer rather than a single User table because each has distinct attributes and business rules. For example, cooks need to store their kitchen address and personal ID for food safety regulations, cyclists need to track their bike type for delivery logistics, and customers need payment options. This separation makes the system clearer and avoids null fields that would occur in a unified user table.
 
-### Experience and Pricing
-Each Experience is tied to a Provider through a foreign key with CASCADE DELETE. Price is DECIMAL(10,2) because the assignment specifically wants Transact-SQL compatibility. Added a CHECK constraint so Price can't go negative. Description is nullable since not every experience needs one.
+## Handling Food Availability
 
-### Group Event Architecture
-SharedExperience is where I model the group events that users organize (this was Star's main requirement). Each one has a Name, Date, and OrganizerID that points back to the Guest table.
+The most interesting challenge was implementing Noah's requirement about time-based availability. I created the Portion entity to represent dishes that cooks make available during specific time windows. I used the SQL Server TIME datatype for AvailableFrom and AvailableUntil fields because the assignment specifically requires this, and it perfectly captures the concept of daily recurring availability windows. Each portion links to exactly one cook through a foreign key, establishing clear ownership of who prepared what food.
 
-Now here's where it gets interesting - SharedExperienceItem works as a junction table between SharedExperience and Experience. I put a composite UNIQUE on (SharedExperienceID, ExperienceID) so you can't accidentally add the same experience twice to an event.
+I added a check constraint to ensure AvailableUntil is always after AvailableFrom, which prevents data entry errors where someone might accidentally set an invalid time range. The quantity field tracks how many portions are available, which decreases as customers place orders.
 
-The Booking table is what actually connects a Guest to an experience in a shared event. It references SharedExperienceItem and has its own UNIQUE constraint on (GuestID, SharedExperienceItemID) to prevent double bookings. BookingDate defaults to GETDATE() for tracking when bookings happen.
+## Order Processing Design
 
-### Discount Implementation
-Noah wanted volume discounts, so I built the Discount table with MinGuests and DiscountPercentage fields (both have CHECK constraints). A provider can have multiple discount tiers - like 10% off for 10+ guests, 20% for 50+, that kind of thing.
+I designed the order system with flexibility in mind. An Order belongs to one customer but can contain items from multiple cooks, which I handle through the OrderItem table. This many-to-many relationship between orders and portions allows customers to order pasta from Noah's kitchen and lemonade from Helle's kitchen in the same transaction, just like the example in the requirements.
 
-## Key Design Decisions
+I deliberately stored the price in OrderItem rather than just referencing the Portion price because prices might change over time, but we need to preserve the historical price that the customer actually paid. This decision ensures accurate financial records.
 
-### Three-Level Booking Structure
-I could have just linked guests directly to experiences, but that wouldn't give me the context I need. The SharedExperience to SharedExperienceItem to Booking flow lets me answer queries like "how many guests booked this specific experience in this specific event" (queries 4-6 need this). Plus it handles Star's requirement about group travel where individuals book their own stuff.
+## Delivery Trip Modeling
 
-### Referential Integrity
-I'm using CASCADE DELETE on the foreign keys to keep things clean. When you delete a provider, their experiences and related bookings go too. Prevents orphaned records from cluttering things up.
+For Star's requirements about tracking deliveries, I created a sophisticated trip system. Each Trip connects one cyclist to one order, recording start time, end time, and earnings. But the real complexity comes with the TripStop entity, which I designed to handle multiple pickup and delivery locations in a single trip.
 
-### Indexing Strategy
-Put indexes on all the foreign key columns since I'm going to be JOINing on them constantly. Primary keys get IDENTITY(1,1) which gives me clustered indexes automatically.
+I used a StopOrder field to maintain the sequence of stops, and a StopType field to distinguish between pickups and deliveries. This design allows for Star's scenario where she made five deliveries in one neighborhood. The system can track the exact route with timestamps at each stop, which helps calculate delivery efficiency and cyclist performance.
 
-## Query Support Verification
+## Rating System Architecture
 
-Here's how the schema handles each required query:
-1. Provider data: straight SELECT from Provider
-2. Experience list: SELECT from Experience table
-3. Shared experiences by date: SELECT from SharedExperience, ORDER BY Date DESC
-4. Guests per shared experience: JOIN from Booking through SharedExperienceItem to SharedExperience
-5. Experiences in a shared experience: JOIN through SharedExperienceItem
-6. Guests for a specific experience in a shared experience: same JOIN chain as #4 but with a filter
-7. Price statistics: aggregate functions on Experience.Price
-8. Guest counts and sales: COUNT and SUM with LEFT JOINs
-9. Discount thresholds: JOIN Provider with Discount
-10. Which discounts apply: bit more complex but the indexed relationships handle it
+I implemented the rating system as a separate entity that can evaluate both food quality and delivery service independently. A customer might love the food but have issues with delivery, or vice versa, so I created separate FoodRating and DeliveryRating fields. Both use check constraints to ensure ratings stay between 1 and 5 stars.
 
-## Normalization Compliance
+The Rating table has nullable foreign keys to both Cook and Cyclist, which provides flexibility. Some orders might only rate the food, others only the delivery, and some both. I added a check constraint to ensure at least one rating exists, preventing empty rating records.
 
-Got the schema to 3NF:
-First normal form - all fields have atomic values.
-Second normal form - no partial dependencies floating around.
-Third normal form - no transitive dependencies either.
+## Data Integrity Measures
 
-I calculate things like total sales at query time instead of storing them. Prevents update anomalies.
+Throughout my design, I prioritized data integrity. I used NOT NULL constraints on essential fields like addresses, phone numbers, and personal IDs because Zoe explicitly stated these are required from all partners. I added UNIQUE constraints on personal IDs to prevent duplicate registrations.
+
+I implemented cascading deletes carefully. When a cook is removed, their portions should also be deleted, but I chose not to cascade delete orders that reference those portions, as we need to maintain order history for financial records. This decision balances data cleanup with business requirements for record keeping.
+
+## Performance Optimization
+
+I created indexes on all foreign key columns to speed up joins, which are frequent in this system. For example, finding all portions for a cook, all orders for a customer, or all trips for a cyclist are common operations that benefit from these indexes. I also indexed fields used in the WHERE clauses of the required queries, such as Cook.Name and Cyclist.Name.
+
+## Time-Based Design Decisions
+
+The distinction between TIME and DATETIME was crucial in my design. I use TIME for portion availability because it represents daily recurring windows (like "available from 11:30 to 12:30 every day"). But I use DATETIME for orders, trips, and ratings because these are specific moments in history that happened once.
+
+This temporal modeling allows the system to answer questions like "What portions are available right now?" by comparing the current time against the TIME fields, while also maintaining complete historical records with DATETIME fields.
+
+## Scalability Considerations
+
+I designed the schema to scale gracefully. The OrderItem and TripStop tables act as junction tables that can handle complex many-to-many relationships without limiting the system. A cyclist can deliver hundreds of orders, a cook can offer dozens of portions, and a customer can place unlimited orders. The identity columns with INT datatype provide enough range for millions of records.
 
 ## Conclusion
 
-This setup covers what Zoe needs (provider and guest data), Noah's volume discount feature, and Star's group organization with individual bookings. The normalized structure keeps data integrity solid while giving me the query performance I need for all 10 required operations. Should scale reasonably well too.
+My database design transforms the informal requirements from the stakeholder interviews into a robust relational model. Every design decision maps back to a specific requirement: TIME datatypes for Noah's availability windows, separate rating fields for Zoe's quality tracking, and comprehensive trip recording for Star's monthly reporting needs. The design balances normalization with practical performance considerations, creating a system that can support the local food delivery app's current needs while remaining flexible for future growth.

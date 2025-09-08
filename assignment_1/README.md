@@ -17,8 +17,8 @@ Local Food Delivery App - A platform connecting home kitchen cooks with customer
 
 ### ✅ Part C: Docker Hub Integration
 - Docker Compose configured to pull from Docker Hub
-- Image: `youruser/local-food-api:latest`
-- Publish command: `docker push youruser/local-food-api:latest`
+- Image: `kevinphangh/local-food-api:latest`
+- Publish command: `docker push kevinphangh/local-food-api:latest`
 
 ### ✅ Part D: Database Design
 - Nine-table relational schema for food delivery system
@@ -105,11 +105,11 @@ docker compose down -v
 ```bash
 # Build the image
 cd src/WebAPI
-docker build -t youruser/local-food-api:latest .
+docker build -t kevinphangh/local-food-api:latest .
 
 # Push to Docker Hub (requires login)
 docker login
-docker push youruser/local-food-api:latest
+docker push kevinphangh/local-food-api:latest
 ```
 
 ### Database Setup
@@ -208,9 +208,9 @@ dotnet clean
 # Create submission package
 cd ../..
 chmod +x prepare_submission.sh
-./prepare_submission.sh au123456  # Replace with your AU ID
+./prepare_submission.sh AU778738
 
-# Creates: sw4bad-mas1-au123456.zip
+# Creates: sw4bad-mas1-AU778738.zip
 ```
 
 ### Submission Package Contents

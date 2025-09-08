@@ -21,7 +21,7 @@ services:
       - localfood-network
 
   webapi:
-    image: youruser/local-food-api:latest
+    image: kevinphangh/local-food-api:latest
     container_name: local-food-webapi
     ports:
       - "8080:8080"

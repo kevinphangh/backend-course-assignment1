@@ -6,7 +6,7 @@ echo "Preparing SW4BAD Assignment 1 for submission..."
 # Require AU ID parameter
 if [ -z "$1" ]; then
     echo "Usage: ./prepare_submission.sh <your-au-id>"
-    echo "Example: ./prepare_submission.sh au123456"
+    echo "Example: ./prepare_submission.sh AU778738"
     exit 1
 fi
 
@@ -58,6 +58,4 @@ echo "- insert_data.sql"
 echo "- queries.sql"
 echo "- ERD.png (Chen notation diagram)"
 echo "- design_reasoning.md (comprehensive design documentation)"
-echo ""
-echo "Note: If PDF format is required for design_reasoning, convert the .md file to PDF"
 echo "Ready to submit to Brightspace!"
