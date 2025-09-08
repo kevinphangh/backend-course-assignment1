@@ -28,6 +28,7 @@ cp database/scripts/insert_data.sql $SUBMISSION_DIR/
 cp database/scripts/queries.sql $SUBMISSION_DIR/
 cp database/design/ERD.png $SUBMISSION_DIR/
 cp database/design/design_reasoning.md $SUBMISSION_DIR/
+cp docker-compose.yml $SUBMISSION_DIR/
 
 # Remove build artifacts
 rm -rf $SUBMISSION_DIR/WebAPI/bin
@@ -52,10 +53,13 @@ rm -rf $SUBMISSION_DIR
 echo "✓ Submission package created: $ZIP_NAME"
 echo ""
 echo "Package contents:"
-echo "- WebAPI/ (cleaned .NET solution)"
+echo "- WebAPI/ (cleaned .NET solution with Dockerfile)"
+echo "- docker-compose.yml (Part C requirement)"
 echo "- create_database.sql"
 echo "- insert_data.sql"  
 echo "- queries.sql"
 echo "- ERD.png (Chen notation diagram)"
-echo "- design_reasoning.md (comprehensive design documentation)"
+echo "- design_reasoning.md (design documentation - convert to PDF if required)"
+echo ""
+echo "⚠️  NOTE: Assignment requires design_reasoning as PDF, not .md"
 echo "Ready to submit to Brightspace!"
