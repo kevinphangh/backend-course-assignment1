@@ -1,7 +1,10 @@
--- Database schema for Local Food Delivery App
--- SQL Server 2022 / Transact-SQL
+-- Database schema for Local Food Delivery Application
+-- Platform: SQL Server 2022 / Transact-SQL
+-- Purpose: SW4BAD Assignment 1 Part D - Database Design
+-- This script creates the complete relational database schema for the food delivery system
 
--- Drop existing tables (in dependency order)
+-- Drop existing tables if they exist (ordered by foreign key dependencies)
+-- Must drop child tables before parent tables to avoid constraint violations
 IF OBJECT_ID('dbo.Rating', 'U') IS NOT NULL DROP TABLE dbo.Rating;
 IF OBJECT_ID('dbo.TripStop', 'U') IS NOT NULL DROP TABLE dbo.TripStop;
 IF OBJECT_ID('dbo.Trip', 'U') IS NOT NULL DROP TABLE dbo.Trip;
@@ -13,7 +16,9 @@ IF OBJECT_ID('dbo.Cyclist', 'U') IS NOT NULL DROP TABLE dbo.Cyclist;
 IF OBJECT_ID('dbo.Cook', 'U') IS NOT NULL DROP TABLE dbo.Cook;
 GO
 
--- Cook: Home kitchen cooks
+-- Table: Cook
+-- Purpose: Stores information about home kitchen cooks offering food
+-- Required fields per assignment: Address, Phone, PersonalID (Norwegian-style CPR number)
 CREATE TABLE dbo.Cook (
     CookID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
@@ -23,7 +28,9 @@ CREATE TABLE dbo.Cook (
 );
 GO
 
--- Cyclist: Delivery gig workers
+-- Table: Cyclist 
+-- Purpose: Stores delivery riders who transport food from cooks to customers
+-- BikeType field helps match cyclists to appropriate delivery distances/loads
 CREATE TABLE dbo.Cyclist (
     CyclistID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
@@ -33,7 +40,9 @@ CREATE TABLE dbo.Cyclist (
 );
 GO
 
--- Customer: App users ordering food
+-- Table: Customer
+-- Purpose: Stores end users who place food orders through the platform
+-- PaymentOption restricted to 'Card' or 'MobilePay' per Danish market requirements
 CREATE TABLE dbo.Customer (
     CustomerID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
@@ -43,7 +52,10 @@ CREATE TABLE dbo.Customer (
 );
 GO
 
--- Portion: Available dishes/portions from cooks
+-- Table: Portion
+-- Purpose: Represents available food items from each cook with quantities and time windows
+-- Uses TIME datatype for AvailableFrom/Until to model recurring daily availability
+-- This fulfills Noah's requirement for lunch break service windows
 CREATE TABLE dbo.Portion (
     PortionID INT IDENTITY(1,1) PRIMARY KEY,
     CookID INT NOT NULL,

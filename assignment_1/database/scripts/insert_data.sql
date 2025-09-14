@@ -1,21 +1,28 @@
--- Sample data for Local Food Delivery App
--- IDs start from 0 for SQL Server 2022 Linux compatibility
+-- Sample test data for Local Food Delivery Application database
+-- Purpose: Provides realistic test data for all 7 required queries in Assignment 1
+-- Note: IDs start from 0 due to SQL Server 2022 Linux IDENTITY behavior with DBCC CHECKIDENT
 
--- Insert Cooks
+-- Insert Cook records
+-- Noah's Kitchen (ID=0) is the primary test cook referenced in most queries
+-- PersonalID follows Danish CPR number format (DDMMYY-XXXX)
 INSERT INTO dbo.Cook (Name, Address, Phone, PersonalID) VALUES
 ('Noah''s Kitchen', 'Finlandsgade 17, 8200 Aarhus N', '+45 71555080', '010100-4201'),
 ('Helle''s Kitchen', 'Ny Munkegade 118, 8200', '+45 12345678', '020202-1234'),
 ('Maria''s Kitchen', 'Finsensgade 1493, 8000 Aarhus', '+45 87654321', '030303-5678');
 GO
 
--- Insert Cyclists
+-- Insert Cyclist records  
+-- Star (ID=0) is the primary test cyclist for Trip #52 query
+-- BikeType indicates delivery capacity (cargo > electric > road/mountain)
 INSERT INTO dbo.Cyclist (Name, Phone, PersonalID, BikeType) VALUES
 ('Star', '+45 98765432', '040404-9876', 'Mountain Bike'),
 ('John', '+45 11223344', '050505-1122', 'Road Bike'),
 ('Emma', '+45 55667788', '060606-5566', 'Electric Bike');
 GO
 
--- Insert Customers
+-- Insert Customer records
+-- Knuth (ID=0) is the primary test customer for Order #42 query
+-- Mix of Card and MobilePay payment options per Danish market
 INSERT INTO dbo.Customer (Name, Address, Phone, PaymentOption) VALUES
 ('Knuth', 'Finsensgade 1493, 8000 Aarhus', '+45 33445566', 'Card'),
 ('Alice', 'Nordre Ringgade 100, 8000 Aarhus', '+45 77889900', 'MobilePay'),
@@ -23,8 +30,9 @@ INSERT INTO dbo.Customer (Name, Address, Phone, PaymentOption) VALUES
 ('Charlie', 'Mejlgade 53, 8000 Aarhus', '+45 66778899', 'MobilePay');
 GO
 
--- Insert Portions (using TIME datatype as required)
--- Noah's Kitchen (CookID = 0)
+-- Insert Portion records with TIME-based availability windows
+-- TIME datatype models recurring daily windows (e.g., lunch 11:30-12:30 every day)
+-- Noah's Kitchen (CookID = 0) - Restaurant worker selling during breaks
 INSERT INTO dbo.Portion (CookID, Name, Quantity, Price, AvailableFrom, AvailableUntil) VALUES
 (0, 'Pasta', 3, 30, '11:30:00', '12:30:00'),
 (0, 'Romkugle', 10, 3, '08:00:00', '12:30:00'),
@@ -42,8 +50,9 @@ INSERT INTO dbo.Portion (CookID, Name, Quantity, Price, AvailableFrom, Available
 (2, 'Salad', 10, 20, '11:00:00', '15:00:00');
 GO
 
--- Insert Orders
--- Order 42 for Knuth (CustomerID = 0)
+-- Insert Order records
+-- Order #42 (ID=0) demonstrates multi-kitchen ordering per Query 3 requirement
+-- TotalAmount pre-calculated based on ordered quantities and portion prices
 INSERT INTO dbo.[Order] (CustomerID, OrderDate, TotalAmount) VALUES
 (0, '2024-06-15 12:00:00', 126); -- 2*Pasta + 4*Romkugle + 2*Lemonade
 

@@ -1,42 +1,52 @@
+# Docker Compose configuration for Local Food Delivery Application
+# Required for SW4BAD Assignment 1 Part C - Docker Hub Integration
+# This file orchestrates both the Web API and SQL Server database containers
+
 services:
+  # SQL Server 2022 database container for persisting application data
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: localfood-sqlserver
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd123
-      - MSSQL_PID=Developer
+      - ACCEPT_EULA=Y                              # Microsoft SQL Server End User License Agreement acceptance (required)
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd123  # System Administrator password (meets SQL Server complexity requirements)
+      - MSSQL_PID=Developer                       # Product edition: Developer (free for non-production use)
     ports:
-      - "1433:1433"
+      - "1433:1433"                               # Expose SQL Server on standard port 1433 for external connections
     volumes:
-      - ./database/scripts:/scripts
-      - sqldata:/var/opt/mssql
+      - ./database/scripts:/scripts               # Mount local SQL scripts directory for database initialization
+      - sqldata:/var/opt/mssql                   # Named volume for persistent database storage across container restarts
     healthcheck:
+      # Health check ensures SQL Server is ready before dependent services start
       test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong@Passw0rd123", "-C", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      interval: 10s      # Perform health check every 10 seconds
+      timeout: 5s        # Each health check times out after 5 seconds
+      retries: 10        # Mark as unhealthy after 10 consecutive failures
+      start_period: 30s  # Grace period before health checks begin (SQL Server startup time)
     networks:
       - localfood-network
 
+  # ASP.NET Core Web API container serving the menu endpoint
   webapi:
-    image: kevinphangh/local-food-api:latest
+    image: kevinphangh/local-food-api:latest      # Pull pre-built image from Docker Hub (Part C requirement)
     container_name: local-food-webapi
     ports:
-      - "8080:8080"
+      - "8080:8080"                               # Map container port 8080 to host port 8080 for API access
     depends_on:
       sqlserver:
-        condition: service_healthy
+        condition: service_healthy                # Only start API after SQL Server passes health check
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Development        # Enable development features like detailed error messages
+      # Connection string using container networking (sqlserver hostname resolves to SQL container)
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=LocalFoodDB;User Id=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=true
     networks:
       - localfood-network
 
+# Named volumes for data persistence across container lifecycle
 volumes:
-  sqldata:
+  sqldata:    # Stores SQL Server database files, survives container removal
 
+# Custom bridge network for inter-container communication
 networks:
   localfood-network:
-    driver: bridge
+    driver: bridge    # Default driver allowing containers to communicate by service name
