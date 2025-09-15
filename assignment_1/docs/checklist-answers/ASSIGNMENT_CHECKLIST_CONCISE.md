@@ -27,17 +27,17 @@ docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
 
 ### Q: Where is the endpoint code?
 **File:** `src/WebAPI/Controllers/MenuController.cs`
-- **Line 14:** `[ApiController]` - Enables automatic validation
-- **Line 15:** `[Route("api/[controller]")]` - Creates `/api/menu` route
-- **Line 25:** First dish = "Group42" (assignment requirement)
-- **Line 45:** `[HttpGet]` - GET method
-- **Line 46:** `Menu()` method returns dishes
-- **Line 48:** `Ok(_dishes)` returns HTTP 200 + JSON
+- **Line 9:** `[ApiController]` - Enables automatic validation
+- **Line 10:** `[Route("api/[controller]")]` - Creates `/api/menu` route
+- **Line 19:** First dish = "Group42" (assignment requirement)
+- **Line 37:** `[HttpGet]` - GET method
+- **Line 38:** `Menu()` method returns dishes
+- **Line 40:** `Ok(_dishes)` returns HTTP 200 + JSON
 
 ### Q: How does the request flow?
 1. Client sends GET to `localhost:8080/api/menu`
 2. Kestrel web server receives request
-3. Middleware pipeline (Program.cs lines 17-19):
+3. Middleware pipeline (Program.cs lines 13-15):
    - UseSwagger()
    - UseSwaggerUI()
    - MapControllers()
@@ -57,40 +57,40 @@ docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
 ### Q: What stages in your Dockerfile?
 **NOT services - STAGES:**
 
-1. **Build Stage** (Line 27-61)
+1. **Build Stage** (Line 5-14)
    - Base: SDK image (~800MB)
    - Purpose: Compile code
    - Discarded after build
 
-2. **Publish Stage** (Line 68-80)
+2. **Publish Stage** (Line 17-18)
    - Extends: Build stage
    - Purpose: Optimize for production
    - Also discarded
 
-3. **Final Stage** (Line 95-128)
+3. **Final Stage** (Line 21-37)
    - Base: Runtime only (~200MB)
    - **This is the actual image**
    - No compilers = secure
 
 ### Q: Key Dockerfile lines explained?
 
-**Line 48:** `COPY ["WebAPI.csproj", "./"]`
+**Line 9:** `COPY ["WebAPI.csproj", "./"]`
 - Copies project file separately for caching
 - If dependencies don't change, saves 30-60 seconds
 
-**Line 101:** `EXPOSE 8080`
+**Line 34:** `EXPOSE 8080`
 - Documentation only - doesn't open port
 - Actual opening: `-p 8080:8080`
 
-**Line 107:** `COPY --from=publish /app/publish .`
+**Line 28:** `COPY --from=publish /app/publish .`
 - **The magic line** - copies from build stage
 - This is why final image is small
 
-**Line 113:** `ENV ASPNETCORE_URLS=http://+:8080`
+**Note:** ENV ASPNETCORE_URLS now in docker-compose.yml
 - `+` means all interfaces (not just localhost)
 - Required for container networking
 
-**Line 128:** `ENTRYPOINT ["dotnet", "WebAPI.dll"]`
+**Line 37:** `ENTRYPOINT ["dotnet", "WebAPI.dll"]`
 - Exec form (not shell) for proper signal handling
 - Runs as PID 1
 
@@ -235,7 +235,7 @@ Password=YourStrong@Passw0rd123
 
 ## 🏆 Grade 12 Checklist
 
-✅ **Group42** first dish (Line 25 MenuController)
+✅ **Group42** first dish (Line 19 MenuController)
 ✅ **Multi-stage Docker** (200MB final, not 800MB)
 ✅ **Chen notation** strictly followed
 ✅ **All cardinalities** marked (1/N/M)

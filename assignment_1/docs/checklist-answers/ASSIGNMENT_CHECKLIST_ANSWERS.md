@@ -63,20 +63,20 @@ curl http://localhost:8080/api/menu
 **Controller Location:** `src/WebAPI/Controllers/MenuController.cs`
 
 **Detailed Code Structure:**
-- **Lines 1-7:** File header comments and using statements
-- **Lines 8-51:** Complete controller implementation
-- **Line 14:** `[ApiController]` attribute for automatic model validation
-- **Line 15:** `[Route("api/[controller]")]` sets route to `/api/menu`
-- **Lines 16:** Controller class declaration inheriting from `ControllerBase`
-- **Lines 21-38:** Private field `_dishes` with hardcoded data
-- **Lines 45-49:** GET endpoint method implementation
+- **Lines 1-3:** Using statements
+- **Lines 4-43:** Complete controller implementation
+- **Line 9:** `[ApiController]` attribute for automatic model validation
+- **Line 10:** `[Route("api/[controller]")]` sets route to `/api/menu`
+- **Line 11:** Controller class declaration inheriting from `ControllerBase`
+- **Lines 15-32:** Private field `_dishes` with hardcoded data
+- **Lines 37-41:** GET endpoint method implementation
 
 **Key implementation details:**
 ```csharp
-[HttpGet]  // Line 45
-public ActionResult<IEnumerable<Dish>> Menu()  // Line 46
+[HttpGet]  // Line 37
+public ActionResult<IEnumerable<Dish>> Menu()  // Line 38
 {
-    return Ok(_dishes);  // Line 48 - Returns 200 OK with JSON
+    return Ok(_dishes);  // Line 40 - Returns 200 OK with JSON
 }
 ```
 
@@ -90,7 +90,7 @@ public ActionResult<IEnumerable<Dish>> Menu()  // Line 46
    - Receives HTTP request on port 8080
    - Passes to ASP.NET Core pipeline
 
-3. **Middleware Pipeline** (Program.cs lines 16-19)
+3. **Middleware Pipeline** (Program.cs lines 13-15)
    - Request logging (if enabled)
    - Exception handling middleware
    - HTTPS redirection (in production)
@@ -105,9 +105,9 @@ public ActionResult<IEnumerable<Dish>> Menu()  // Line 46
    - DI container creates new `MenuController` instance
    - No constructor dependencies needed (simple controller)
 
-6. **Method Execution** (Lines 46-48)
+6. **Method Execution** (Lines 38-40)
    - `Menu()` method invoked
-   - Accesses `_dishes` field (lines 21-38)
+   - Accesses `_dishes` field (lines 15-32)
    - First dish "Group42" fulfills assignment requirement
 
 7. **Response Generation**
@@ -145,7 +145,7 @@ I would add the `[Authorize]` attribute above the controller or method, configur
 I implemented a sophisticated multi-stage Dockerfile to optimize both build time and final image size:
 
 ```dockerfile
-# Stage 1: Build Stage (Lines 6-16)
+# Stage 1: Build Stage (Lines 5-14)
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["WebAPI.csproj", "./"]
@@ -153,11 +153,11 @@ RUN dotnet restore "WebAPI.csproj"
 COPY . .
 RUN dotnet build "WebAPI.csproj" -c Release -o /app/build
 
-# Stage 2: Publish Stage (Lines 20-21)
+# Stage 2: Publish Stage (Lines 17-18)
 FROM build AS publish
 RUN dotnet publish "WebAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Stage 3: Runtime Stage (Lines 25-39)
+# Stage 3: Runtime Stage (Lines 21-37)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 EXPOSE 8080

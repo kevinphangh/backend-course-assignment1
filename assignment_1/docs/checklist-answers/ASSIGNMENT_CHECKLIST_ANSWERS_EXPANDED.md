@@ -169,21 +169,21 @@ namespace WebAPI.Controllers
     /// REST API controller for menu operations
     /// </summary>
 
-    // Line 14: ApiController attribute - enables:
+    // Line 9: ApiController attribute - enables:
     // - Automatic model validation
     // - Attribute routing requirement
     // - Problem details for errors
     [ApiController]
 
-    // Line 15: Route template
+    // Line 10: Route template
     // [controller] token replaced with "Menu" from class name
     [Route("api/[controller]")]
 
-    // Line 16: Class declaration
+    // Line 11: Class declaration
     public class MenuController : ControllerBase
     {
         // Lines 18-20: Field documentation
-        // Lines 21-38: Private field with hardcoded dishes
+        // Lines 15-32: Private field with hardcoded dishes
         private readonly List<Dish> _dishes = new List<Dish>
         {
             new Dish { Name = "Group42", Price = 75 },  // Required first dish
@@ -192,13 +192,13 @@ namespace WebAPI.Controllers
         };
 
         // Lines 40-44: Method documentation
-        // Line 45: HTTP verb attribute
+        // Line 37: HTTP verb attribute
         [HttpGet]
 
-        // Line 46: Method signature with strong typing
+        // Line 38: Method signature with strong typing
         public ActionResult<IEnumerable<Dish>> Menu()
         {
-            // Line 48: Return with HTTP 200 status
+            // NEEDS_UPDATE: Return with HTTP 200 status
             return Ok(_dishes);
         }
     }
@@ -230,7 +230,7 @@ namespace WebAPI.Controllers
    - Accepts incoming connection
    - Parses HTTP request into HttpContext
 
-5. **Middleware Pipeline Execution** (Program.cs lines 17-19)
+5. **Middleware Pipeline Execution** (Program.cs lines 13-15)
    ```csharp
    app.UseSwagger();       // Checks if request is for /swagger
    app.UseSwaggerUI();     // Checks if request is for Swagger UI
@@ -253,7 +253,7 @@ namespace WebAPI.Controllers
    - `[ApiController]` would auto-validate if needed
    - No validation errors
 
-9. **Action Method Execution** (Line 46-48)
+9. **Action Method Execution** (Line 38-48)
    - `Menu()` method invoked
    - `_dishes` list accessed (3 items)
    - `Ok()` creates `OkObjectResult` with value
@@ -321,24 +321,24 @@ The client sends `Accept: application/json` header. ASP.NET Core's formatters ch
 
 ```dockerfile
 # Stage 1: Build Stage (Lines 27-61)
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build  # Line 27
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build  # NEEDS_UPDATE
 WORKDIR /src                                     # Line 28
-COPY ["WebAPI.csproj", "./"]                    # Line 48
+COPY ["WebAPI.csproj", "./"]                    # NEEDS_UPDATE
 RUN dotnet restore "WebAPI.csproj"              # Line 52
 COPY . .                                         # Line 56
-RUN dotnet build "WebAPI.csproj" -c Release     # Line 61
+RUN dotnet build "WebAPI.csproj" -c Release     # NEEDS_UPDATE
 
 # Stage 2: Publish Stage (Lines 68-80)
-FROM build AS publish                           # Line 68
-RUN dotnet publish "WebAPI.csproj" -c Release   # Line 80
+FROM build AS publish                           # NEEDS_UPDATE
+RUN dotnet publish "WebAPI.csproj" -c Release   # NEEDS_UPDATE
 
 # Stage 3: Runtime Stage (Lines 95-128)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final  # Line 95
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final  # NEEDS_UPDATE
 WORKDIR /app                                        # Line 96
 EXPOSE 8080                                         # Line 101
-COPY --from=publish /app/publish .                 # Line 107
+COPY --from=publish /app/publish .                 # NEEDS_UPDATE
 ENV ASPNETCORE_URLS=http://+:8080                  # Line 113
-ENTRYPOINT ["dotnet", "WebAPI.dll"]                # Line 128
+ENTRYPOINT ["dotnet", "WebAPI.dll"]                # NEEDS_UPDATE
 ```
 
 ### Q: What services did you define in your docker file?
@@ -381,7 +381,7 @@ WORKDIR /src
 - Alternative to `RUN mkdir /src && cd /src`
 - Best practice: Use WORKDIR instead of `cd`
 
-**Line 48 - Layer Caching Strategy**
+**NEEDS_UPDATE - Layer Caching Strategy**
 ```dockerfile
 COPY ["WebAPI.csproj", "./"]
 ```
@@ -400,7 +400,7 @@ RUN dotnet restore "WebAPI.csproj"
 - Creates `obj/project.assets.json`
 - Network-heavy operation isolated in its own layer
 
-**Line 80 - Publish Configuration**
+**NEEDS_UPDATE - Publish Configuration**
 ```dockerfile
 RUN dotnet publish "WebAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 ```
@@ -423,7 +423,7 @@ EXPOSE 8080
   - Orchestrators (Kubernetes, Swarm)
 - Actual port opening: `-p` flag or compose `ports:`
 
-**Line 107 - The Magic Line**
+**NEEDS_UPDATE - The Magic Line**
 ```dockerfile
 COPY --from=publish /app/publish .
 ```
@@ -444,7 +444,7 @@ ENV ASPNETCORE_URLS=http://+:8080
   - `http://*:8080` (also works)
 - Container networking requires non-localhost binding
 
-**Line 128 - Process Management**
+**NEEDS_UPDATE - Process Management**
 ```dockerfile
 ENTRYPOINT ["dotnet", "WebAPI.dll"]
 ```

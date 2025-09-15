@@ -1,10 +1,6 @@
--- Database schema for Local Food Delivery Application
--- Platform: SQL Server 2022 / Transact-SQL
--- Purpose: SW4BAD Assignment 1 Part D - Database Design
--- This script creates the complete relational database schema for the food delivery system
+-- SQL Server 2022 schema for Local Food Delivery (SW4BAD Assignment 1)
 
--- Drop existing tables if they exist (ordered by foreign key dependencies)
--- Must drop child tables before parent tables to avoid constraint violations
+-- Drop tables in dependency order
 IF OBJECT_ID('dbo.Rating', 'U') IS NOT NULL DROP TABLE dbo.Rating;
 IF OBJECT_ID('dbo.TripStop', 'U') IS NOT NULL DROP TABLE dbo.TripStop;
 IF OBJECT_ID('dbo.Trip', 'U') IS NOT NULL DROP TABLE dbo.Trip;
@@ -16,9 +12,7 @@ IF OBJECT_ID('dbo.Cyclist', 'U') IS NOT NULL DROP TABLE dbo.Cyclist;
 IF OBJECT_ID('dbo.Cook', 'U') IS NOT NULL DROP TABLE dbo.Cook;
 GO
 
--- Table: Cook
--- Purpose: Stores information about home kitchen cooks offering food
--- Required fields per assignment: Address, Phone, PersonalID (Norwegian-style CPR number)
+-- Cook: Home kitchen providers
 CREATE TABLE dbo.Cook (
     CookID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
@@ -28,9 +22,7 @@ CREATE TABLE dbo.Cook (
 );
 GO
 
--- Table: Cyclist 
--- Purpose: Stores delivery riders who transport food from cooks to customers
--- BikeType field helps match cyclists to appropriate delivery distances/loads
+-- Cyclist: Delivery riders
 CREATE TABLE dbo.Cyclist (
     CyclistID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
@@ -40,9 +32,7 @@ CREATE TABLE dbo.Cyclist (
 );
 GO
 
--- Table: Customer
--- Purpose: Stores end users who place food orders through the platform
--- PaymentOption restricted to 'Card' or 'MobilePay' per Danish market requirements
+-- Customer: End users
 CREATE TABLE dbo.Customer (
     CustomerID INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(255) NOT NULL,
@@ -52,19 +42,16 @@ CREATE TABLE dbo.Customer (
 );
 GO
 
--- Table: Portion
--- Purpose: Represents available food items from each cook with quantities and time windows
--- Uses TIME datatype for AvailableFrom/Until to model recurring daily availability
--- This fulfills Noah's requirement for lunch break service windows
+-- Portion: Available food items with daily time windows
 CREATE TABLE dbo.Portion (
     PortionID INT IDENTITY(1,1) PRIMARY KEY,
     CookID INT NOT NULL,
     Name NVARCHAR(255) NOT NULL,
     Quantity INT NOT NULL CHECK (Quantity > 0),
     Price INT NOT NULL CHECK (Price > 0),
-    AvailableFrom TIME NOT NULL,
+    AvailableFrom TIME NOT NULL,  -- Recurring daily availability
     AvailableUntil TIME NOT NULL,
-    CONSTRAINT FK_Portion_Cook FOREIGN KEY (CookID) 
+    CONSTRAINT FK_Portion_Cook FOREIGN KEY (CookID)
         REFERENCES dbo.Cook(CookID) ON DELETE CASCADE,
     CONSTRAINT CHK_TimeInterval CHECK (AvailableUntil > AvailableFrom)
 );
@@ -76,12 +63,12 @@ CREATE TABLE dbo.[Order] (
     CustomerID INT NOT NULL,
     OrderDate DATETIME NOT NULL DEFAULT GETDATE(),
     TotalAmount INT NOT NULL CHECK (TotalAmount >= 0),
-    CONSTRAINT FK_Order_Customer FOREIGN KEY (CustomerID) 
+    CONSTRAINT FK_Order_Customer FOREIGN KEY (CustomerID)
         REFERENCES dbo.Customer(CustomerID) ON DELETE CASCADE
 );
 GO
 
--- OrderItem: Items in an order
+-- OrderItem: Items in an order (supports multi-kitchen orders)
 CREATE TABLE dbo.OrderItem (
     OrderItemID INT IDENTITY(1,1) PRIMARY KEY,
     OrderID INT NOT NULL,
@@ -89,16 +76,16 @@ CREATE TABLE dbo.OrderItem (
     CookID INT NOT NULL,
     Quantity INT NOT NULL CHECK (Quantity > 0),
     Price INT NOT NULL CHECK (Price >= 0),
-    CONSTRAINT FK_OrderItem_Order FOREIGN KEY (OrderID) 
+    CONSTRAINT FK_OrderItem_Order FOREIGN KEY (OrderID)
         REFERENCES dbo.[Order](OrderID) ON DELETE CASCADE,
-    CONSTRAINT FK_OrderItem_Portion FOREIGN KEY (PortionID) 
+    CONSTRAINT FK_OrderItem_Portion FOREIGN KEY (PortionID)
         REFERENCES dbo.Portion(PortionID),
-    CONSTRAINT FK_OrderItem_Cook FOREIGN KEY (CookID) 
+    CONSTRAINT FK_OrderItem_Cook FOREIGN KEY (CookID)
         REFERENCES dbo.Cook(CookID)
 );
 GO
 
--- Trip: Delivery trips for cyclists
+-- Trip: Delivery trips
 CREATE TABLE dbo.Trip (
     TripID INT IDENTITY(1,1) PRIMARY KEY,
     CyclistID INT NOT NULL,
@@ -106,14 +93,14 @@ CREATE TABLE dbo.Trip (
     StartTime DATETIME NOT NULL,
     EndTime DATETIME NULL,
     Earnings INT NOT NULL CHECK (Earnings >= 0),
-    CONSTRAINT FK_Trip_Cyclist FOREIGN KEY (CyclistID) 
+    CONSTRAINT FK_Trip_Cyclist FOREIGN KEY (CyclistID)
         REFERENCES dbo.Cyclist(CyclistID) ON DELETE CASCADE,
-    CONSTRAINT FK_Trip_Order FOREIGN KEY (OrderID) 
+    CONSTRAINT FK_Trip_Order FOREIGN KEY (OrderID)
         REFERENCES dbo.[Order](OrderID)
 );
 GO
 
--- TripStop: Pickup and delivery addresses for a trip
+-- TripStop: Multiple stops per trip (pickup/delivery)
 CREATE TABLE dbo.TripStop (
     TripStopID INT IDENTITY(1,1) PRIMARY KEY,
     TripID INT NOT NULL,
@@ -121,12 +108,12 @@ CREATE TABLE dbo.TripStop (
     StopTime TIME NOT NULL,
     StopType NVARCHAR(20) NOT NULL CHECK (StopType IN ('Pickup', 'Delivery')),
     StopOrder INT NOT NULL,
-    CONSTRAINT FK_TripStop_Trip FOREIGN KEY (TripID) 
+    CONSTRAINT FK_TripStop_Trip FOREIGN KEY (TripID)
         REFERENCES dbo.Trip(TripID) ON DELETE CASCADE
 );
 GO
 
--- Rating: Customer ratings for food and delivery
+-- Rating: 1-5 star ratings for food and delivery
 CREATE TABLE dbo.Rating (
     RatingID INT IDENTITY(1,1) PRIMARY KEY,
     OrderID INT NOT NULL,
@@ -135,30 +122,27 @@ CREATE TABLE dbo.Rating (
     FoodRating INT NULL CHECK (FoodRating BETWEEN 1 AND 5),
     DeliveryRating INT NULL CHECK (DeliveryRating BETWEEN 1 AND 5),
     RatingDate DATETIME NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Rating_Order FOREIGN KEY (OrderID) 
+    CONSTRAINT FK_Rating_Order FOREIGN KEY (OrderID)
         REFERENCES dbo.[Order](OrderID) ON DELETE CASCADE,
-    CONSTRAINT FK_Rating_Cook FOREIGN KEY (CookID) 
+    CONSTRAINT FK_Rating_Cook FOREIGN KEY (CookID)
         REFERENCES dbo.Cook(CookID),
-    CONSTRAINT FK_Rating_Cyclist FOREIGN KEY (CyclistID) 
+    CONSTRAINT FK_Rating_Cyclist FOREIGN KEY (CyclistID)
         REFERENCES dbo.Cyclist(CyclistID),
     CONSTRAINT CHK_AtLeastOneRating CHECK (FoodRating IS NOT NULL OR DeliveryRating IS NOT NULL)
 );
 GO
 
--- Create indexes for foreign keys and common queries
+-- Performance indexes
 CREATE INDEX IX_Portion_CookID ON dbo.Portion(CookID);
 CREATE INDEX IX_Order_CustomerID ON dbo.[Order](CustomerID);
 CREATE INDEX IX_OrderItem_OrderID ON dbo.OrderItem(OrderID);
-CREATE INDEX IX_OrderItem_PortionID ON dbo.OrderItem(PortionID);
 CREATE INDEX IX_Trip_CyclistID ON dbo.Trip(CyclistID);
-CREATE INDEX IX_Trip_OrderID ON dbo.Trip(OrderID);
 CREATE INDEX IX_TripStop_TripID ON dbo.TripStop(TripID);
-CREATE INDEX IX_Rating_OrderID ON dbo.Rating(OrderID);
 CREATE INDEX IX_Rating_CookID ON dbo.Rating(CookID);
 CREATE INDEX IX_Rating_CyclistID ON dbo.Rating(CyclistID);
 GO
 
--- Reset identity seeds for SQL Server 2022 Linux compatibility
+-- Reset identity seeds to start from 0 (SQL Server 2022 Linux behavior)
 DBCC CHECKIDENT ('dbo.Cook', RESEED, 0);
 DBCC CHECKIDENT ('dbo.Cyclist', RESEED, 0);
 DBCC CHECKIDENT ('dbo.Customer', RESEED, 0);
