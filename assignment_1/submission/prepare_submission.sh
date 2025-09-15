@@ -15,20 +15,20 @@ SUBMISSION_DIR="submission_temp"
 ZIP_NAME="sw4bad-mas1-${AU_ID}.zip"
 
 echo "Cleaning solution..."
-cd src/WebAPI && dotnet clean && cd ../..
+cd ../src/WebAPI && dotnet clean && cd ../..
 
 echo "Creating submission structure..."
 rm -rf $SUBMISSION_DIR
 mkdir -p $SUBMISSION_DIR
 
 # Copy files to flat structure for submission
-cp -r src/WebAPI $SUBMISSION_DIR/
-cp database/scripts/create_database.sql $SUBMISSION_DIR/
-cp database/scripts/insert_data.sql $SUBMISSION_DIR/
-cp database/scripts/queries.sql $SUBMISSION_DIR/
-cp database/design/ERD.png $SUBMISSION_DIR/
-cp database/design/design_reasoning.md $SUBMISSION_DIR/
-cp docker-compose.yml $SUBMISSION_DIR/
+cp -r ../src/WebAPI $SUBMISSION_DIR/
+cp ../database/scripts/create_database.sql $SUBMISSION_DIR/
+cp ../database/scripts/insert_data.sql $SUBMISSION_DIR/
+cp ../database/scripts/queries.sql $SUBMISSION_DIR/
+cp ../database/design/ERD.png $SUBMISSION_DIR/
+cp ../database/design/design_reasoning.md $SUBMISSION_DIR/
+cp ../docker-compose.yml $SUBMISSION_DIR/
 
 # Remove build artifacts
 rm -rf $SUBMISSION_DIR/WebAPI/bin
