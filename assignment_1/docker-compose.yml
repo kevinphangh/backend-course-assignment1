@@ -1,52 +1,310 @@
-# Docker Compose configuration for Local Food Delivery Application
-# Required for SW4BAD Assignment 1 Part C - Docker Hub Integration
-# This file orchestrates both the Web API and SQL Server database containers
+# ========================================================================================================
+# Docker Compose Configuration for Local Food Delivery Application
+# ========================================================================================================
+# Version: Docker Compose v3.8+ (modern features, production-ready)
+#
+# WHY DOCKER COMPOSE?
+# -------------------
+# 1. ORCHESTRATION: Manages multiple containers as a single application
+# 2. NETWORKING: Automatic DNS resolution between containers
+# 3. DEPENDENCY MANAGEMENT: Ensures services start in correct order
+# 4. ENVIRONMENT CONSISTENCY: Same setup for all developers
+# 5. ONE-COMMAND DEPLOYMENT: docker-compose up starts entire stack
+#
+# ARCHITECTURE OVERVIEW:
+# ----------------------
+#   [Internet] --> :8080 --> [Web API Container] --> [SQL Server Container]
+#                                    |                         |
+#                                    └─────[Bridge Network]────┘
+#                                             (Internal DNS)
+#
+# ========================================================================================================
 
 services:
-  # SQL Server 2022 database container for persisting application data
+  # ========================================================================================================
+  # SERVICE 1: SQL SERVER DATABASE
+  # ========================================================================================================
+  # SQL Server runs in its own container, isolated from the host system.
+  # This ensures consistent database behavior across different development machines.
+  #
+  # WHY CONTAINERIZED DATABASE?
+  # ---------------------------
+  # 1. No local SQL Server installation required
+  # 2. Consistent version across all environments
+  # 3. Easy cleanup (just remove container)
+  # 4. Isolated from other projects
+  # 5. Version-controlled configuration
   sqlserver:
+    # Microsoft's official SQL Server 2022 image for Linux
+    # Using 'latest' tag - in production, pin to specific version (e.g., 2022-CU5)
     image: mcr.microsoft.com/mssql/server:2022-latest
+
+    # Container name for easier identification in docker ps
+    # Without this, Docker generates random names like "sleepy_einstein"
     container_name: localfood-sqlserver
+
+    # --------------------------------------------------------------------------------------------------------
+    # ENVIRONMENT VARIABLES
+    # --------------------------------------------------------------------------------------------------------
+    # These configure SQL Server on first run. After initialization, changing these has no effect
+    # (configuration is persisted in the data volume).
     environment:
-      - ACCEPT_EULA=Y                              # Microsoft SQL Server End User License Agreement acceptance (required)
-      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd123  # System Administrator password (meets SQL Server complexity requirements)
-      - MSSQL_PID=Developer                       # Product edition: Developer (free for non-production use)
+      # ACCEPT_EULA=Y is legally required by Microsoft
+      # Without this, container exits immediately with license error
+      - ACCEPT_EULA=Y
+
+      # SA (System Administrator) password - WHY THESE REQUIREMENTS?
+      # -------------------------------------------------------------
+      # SQL Server enforces complexity: 8+ chars, uppercase, lowercase, number, special char
+      # This prevents weak passwords that could be brute-forced
+      # In production: Use Docker secrets, not plain text
+      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd123
+
+      # Product ID determines feature set and licensing:
+      # - Developer: Full features, free, non-production only
+      # - Express: Free, production OK, 10GB limit
+      # - Standard/Enterprise: Paid, production features
+      - MSSQL_PID=Developer
+
+    # --------------------------------------------------------------------------------------------------------
+    # PORT MAPPING: HOST:CONTAINER
+    # --------------------------------------------------------------------------------------------------------
+    # Format: "host_port:container_port"
+    # SQL Server always listens on 1433 inside container
+    # We map it to host's 1433 for tools like SSMS, Azure Data Studio
+    #
+    # SECURITY NOTE: In production, don't expose database ports publicly
+    # Only the API should access the database through internal network
     ports:
-      - "1433:1433"                               # Expose SQL Server on standard port 1433 for external connections
+      - "1433:1433"
+
+    # --------------------------------------------------------------------------------------------------------
+    # VOLUME MOUNTING
+    # --------------------------------------------------------------------------------------------------------
     volumes:
-      - ./database/scripts:/scripts               # Mount local SQL scripts directory for database initialization
-      - sqldata:/var/opt/mssql                   # Named volume for persistent database storage across container restarts
+      # BIND MOUNT: Links host directory to container directory
+      # --------------------------------------------------------
+      # ./database/scripts on host --> /scripts in container
+      # Used for: SQL initialization scripts
+      # Why: Scripts are version-controlled, need easy editing
+      # Changes on host immediately visible in container
+      - ./database/scripts:/scripts
+
+      # NAMED VOLUME: Docker-managed storage
+      # -------------------------------------
+      # sqldata --> /var/opt/mssql (SQL Server's data directory)
+      # Used for: Database files (.mdf, .ldf)
+      # Why: Persists data between container restarts
+      # Survives 'docker-compose down' (not 'down -v')
+      - sqldata:/var/opt/mssql
+
+    # --------------------------------------------------------------------------------------------------------
+    # HEALTH CHECK: Ensures SQL Server is truly ready
+    # --------------------------------------------------------------------------------------------------------
+    # WHY HEALTH CHECKS MATTER:
+    # -------------------------
+    # SQL Server container can be "running" but not "ready" (still initializing)
+    # Without health check, API might start and fail to connect
+    # This implements retry logic at the orchestration level
     healthcheck:
-      # Health check ensures SQL Server is ready before dependent services start
+      # The test command - what actually checks health
+      # CMD format used because we're running a shell command
+      # /opt/mssql-tools18/bin/sqlcmd: SQL Server 2022 uses tools18 (not tools)
+      # -S localhost: Connect to SQL Server on localhost (inside container)
+      # -U sa: Use SA account
+      # -P: Password (same as MSSQL_SA_PASSWORD)
+      # -C: Trust server certificate (required for SQL Server 2022)
+      # -Q "SELECT 1": Simple query that returns 1 if server is responsive
       test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong@Passw0rd123", "-C", "-Q", "SELECT 1"]
-      interval: 10s      # Perform health check every 10 seconds
-      timeout: 5s        # Each health check times out after 5 seconds
-      retries: 10        # Mark as unhealthy after 10 consecutive failures
-      start_period: 30s  # Grace period before health checks begin (SQL Server startup time)
+
+      # Health check timing configuration:
+      interval: 10s       # Check every 10 seconds
+      timeout: 5s         # Each check must complete within 5 seconds
+      retries: 10         # After 10 failures, mark as unhealthy
+      start_period: 30s   # Wait 30s before first check (SQL Server needs time to start)
+
+      # Total time before unhealthy: start_period + (interval * retries) = 30s + 100s = 130s
+
+    # Container joins this network for internal communication
     networks:
       - localfood-network
 
-  # ASP.NET Core Web API container serving the menu endpoint
+  # ========================================================================================================
+  # SERVICE 2: WEB API
+  # ========================================================================================================
+  # The ASP.NET Core Web API that serves the /api/menu endpoint.
+  # This is the public-facing service that clients interact with.
   webapi:
-    image: kevinphangh/local-food-api:latest      # Pull pre-built image from Docker Hub (Part C requirement)
+    # Pre-built image from Docker Hub (Assignment Part C requirement)
+    # In development, you might use:
+    #   build: ./src/WebAPI  # Build from local Dockerfile
+    # This would rebuild on code changes
+    image: kevinphangh/local-food-api:latest
+
     container_name: local-food-webapi
+
+    # --------------------------------------------------------------------------------------------------------
+    # PORT MAPPING
+    # --------------------------------------------------------------------------------------------------------
+    # 8080:8080 - Both host and container use 8080
+    # Why not 80? Port 80 often requires root/admin privileges
+    # 8080 is conventional for development web services
     ports:
-      - "8080:8080"                               # Map container port 8080 to host port 8080 for API access
+      - "8080:8080"
+
+    # --------------------------------------------------------------------------------------------------------
+    # DEPENDENCY MANAGEMENT WITH HEALTH CHECKS
+    # --------------------------------------------------------------------------------------------------------
+    # depends_on with condition ensures proper startup order
+    # Without this: API starts immediately, fails to connect to database
+    # With this: API waits for SQL Server to be healthy
     depends_on:
       sqlserver:
-        condition: service_healthy                # Only start API after SQL Server passes health check
+        # service_healthy means SQL Server passed its health check
+        # Other options:
+        # - service_started: Container started (not necessarily ready)
+        # - service_completed_successfully: For one-time jobs
+        condition: service_healthy
+
+    # --------------------------------------------------------------------------------------------------------
+    # ENVIRONMENT CONFIGURATION
+    # --------------------------------------------------------------------------------------------------------
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development        # Enable development features like detailed error messages
-      # Connection string using container networking (sqlserver hostname resolves to SQL container)
+      # ASP.NET Core environment affects:
+      # - Error detail level (detailed in Development)
+      # - Static file serving
+      # - Response caching
+      # - Configuration file selection (appsettings.Development.json)
+      - ASPNETCORE_ENVIRONMENT=Development
+
+      # CONNECTION STRING BREAKDOWN:
+      # ----------------------------
+      # Server=sqlserver
+      #   - 'sqlserver' is the service name above
+      #   - Docker Compose creates DNS entry: sqlserver -> container IP
+      #   - This is why we don't use localhost or IP addresses
+      #   - Automatic DNS is a key benefit of Docker networks
+      #
+      # Database=LocalFoodDB
+      #   - Database name (must be created after container starts)
+      #
+      # User Id=sa;Password=...
+      #   - Credentials must match SQL Server environment vars
+      #
+      # TrustServerCertificate=true
+      #   - Required for SQL Server 2022 without valid SSL cert
+      #   - In production: Use proper certificates
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=LocalFoodDB;User Id=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=true
+
     networks:
       - localfood-network
 
-# Named volumes for data persistence across container lifecycle
+# ========================================================================================================
+# VOLUMES: Persistent Storage Management
+# ========================================================================================================
+# Named volumes are Docker-managed directories that persist data.
+# They survive container removal but not 'docker-compose down -v'
+#
+# VOLUME TYPES COMPARISON:
+# ------------------------
+# 1. Named Volume (used here):
+#    - Docker manages location (/var/lib/docker/volumes/)
+#    - Portable between systems
+#    - Better performance on Windows/Mac
+#
+# 2. Bind Mount (alternative):
+#    volumes:
+#      - /absolute/path/on/host:/path/in/container
+#    - You control exact location
+#    - Good for development (live code reloading)
+#    - Path must exist on host
+#
+# 3. tmpfs Mount (for temporary data):
+#    - Stored in RAM
+#    - Lost on container stop
+#    - Good for sensitive temporary data
 volumes:
-  sqldata:    # Stores SQL Server database files, survives container removal
+  sqldata:
+    # No driver specified = uses default 'local' driver
+    # Data stored at: /var/lib/docker/volumes/assignment_1_sqldata/_data
+    # To backup: docker run --rm -v assignment_1_sqldata:/data -v $(pwd):/backup alpine tar czf /backup/sqldata.tar.gz /data
+    # To inspect: docker volume inspect assignment_1_sqldata
 
-# Custom bridge network for inter-container communication
+# ========================================================================================================
+# NETWORKS: Container Communication
+# ========================================================================================================
+# Docker Compose creates an isolated network for security and organization.
+#
+# NETWORK TYPES:
+# --------------
+# 1. bridge (default): Isolated network with automatic DNS
+# 2. host: Container uses host network (no isolation)
+# 3. none: No networking
+# 4. overlay: Multi-host networking (Docker Swarm)
 networks:
   localfood-network:
-    driver: bridge    # Default driver allowing containers to communicate by service name
+    driver: bridge
+    # Bridge network features:
+    # - Automatic DNS resolution (container names become hostnames)
+    # - Isolation from other Docker networks
+    # - Containers can communicate using service names
+    # - External access only through published ports
+    #
+    # DNS RESOLUTION EXAMPLE:
+    # ----------------------
+    # From webapi container:
+    #   ping sqlserver        --> Works (resolves to SQL container IP)
+    #   ping localfood-sqlserver --> Works (container name)
+    #   ping localhost        --> Only sees webapi itself
+    #
+    # From host machine:
+    #   ping sqlserver        --> Fails (not in host's DNS)
+    #   curl localhost:8080   --> Works (port is published)
+
+# ========================================================================================================
+# COMMON COMMANDS AND TROUBLESHOOTING
+# ========================================================================================================
+# Start services:
+#   docker-compose up -d          # -d for detached/background mode
+#
+# View logs:
+#   docker-compose logs -f        # -f to follow/tail logs
+#   docker-compose logs sqlserver # Specific service
+#
+# Execute commands in container:
+#   docker-compose exec sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd123 -C
+#
+# Stop services:
+#   docker-compose down           # Stops and removes containers, keeps volumes
+#   docker-compose down -v        # Also removes volumes (full cleanup)
+#
+# Rebuild after Dockerfile changes:
+#   docker-compose build
+#   docker-compose up --build     # Build and start
+#
+# Scale services (if stateless):
+#   docker-compose up --scale webapi=3  # Run 3 API instances
+#
+# TROUBLESHOOTING:
+# ----------------
+# SQL Server won't start:
+#   - Check EULA acceptance
+#   - Verify password complexity
+#   - Ensure 2GB+ RAM available
+#   - Check ports not in use: netstat -an | grep 1433
+#
+# API can't connect to database:
+#   - Verify SQL Server is healthy: docker-compose ps
+#   - Check connection string Server=sqlserver (not localhost)
+#   - Ensure LocalFoodDB exists
+#   - Verify network: docker network inspect assignment_1_localfood-network
+#
+# "Port already in use" error:
+#   - Find process: lsof -i :8080 (Linux/Mac) or netstat -ano | findstr :8080 (Windows)
+#   - Change port: "8081:8080" to use 8081 on host
+#
+# Performance issues:
+#   - Allocate more resources: Docker Desktop > Settings > Resources
+#   - Use volumes instead of bind mounts for database
+#   - Ensure Docker has 4GB+ RAM for SQL Server
+# ========================================================================================================
