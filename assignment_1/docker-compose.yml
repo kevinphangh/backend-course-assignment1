@@ -26,7 +26,7 @@ services:
 
   # api from Docker Hub
   webapi:
-    image: kevinphangh/localfood-api:latest  # pulls from Docker Hub
+    image: kevinphangh/localfood-api:latest  
     container_name: localfood-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
