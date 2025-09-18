@@ -1,6 +1,3 @@
--- Test data for Local Food Delivery database
--- IDs start from 0 (SQL Server 2022 Linux IDENTITY behavior)
-
 -- Cook records
 INSERT INTO dbo.Cook (Name, Address, Phone, PersonalID) VALUES
 ('Mormors Mad', 'Finlandsgade 17, 8200 Aarhus N', '+45 71555080', '010100-4201'),
