@@ -24,12 +24,9 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # api
+  # api from Docker Hub
   webapi:
-    image: localfood-api:latest
-    build:
-      context: ./src/WebAPI
-      dockerfile: Dockerfile
+    image: kevinphangh/localfood-api:latest  # pulls from Docker Hub
     container_name: localfood-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
