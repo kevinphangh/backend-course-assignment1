@@ -3,21 +3,19 @@ using WebAPI.Models;
 
 namespace WebAPI.Controllers
 {
-    /// <summary>
-    /// Menu endpoint for SW4BAD Assignment 1 Part A
-    /// </summary>
+    // menu controller
     [ApiController]
     [Route("api/[controller]")]
     public class MenuController : ControllerBase
     {
-        // Hardcoded dishes per assignment requirements
-        // First dish must be "Group42" (Part A requirement)
+        // TODO: move to database later
+        // first dish has to be Group42 for the assignment
         private readonly List<Dish> _dishes = new List<Dish>
         {
             new Dish
             {
                 Name = "Group42",
-                Price = 75  // DKK
+                Price = 75  // danish kroner
             },
             new Dish
             {
@@ -31,12 +29,11 @@ namespace WebAPI.Controllers
             }
         };
 
-        /// <summary>
-        /// GET /api/menu - Returns available dishes
-        /// </summary>
+        // get menu items
         [HttpGet]
         public ActionResult<IEnumerable<Dish>> Menu()
         {
+            // maybe add filtering here later??
             return Ok(_dishes);
         }
     }

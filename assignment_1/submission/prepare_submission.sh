@@ -15,27 +15,27 @@ SUBMISSION_DIR="submission_temp"
 ZIP_NAME="sw4bad-mas1-${AU_ID}.zip"
 
 echo "Cleaning solution..."
-cd ../src/WebAPI && dotnet clean && cd ../..
+cd src/WebAPI && dotnet clean && cd ../..
 
 echo "Creating submission structure..."
-rm -rf $SUBMISSION_DIR
-mkdir -p $SUBMISSION_DIR
+rm -rf submission/$SUBMISSION_DIR
+mkdir -p submission/$SUBMISSION_DIR
 
 # Copy files to flat structure for submission
-cp -r ../src/WebAPI $SUBMISSION_DIR/
-cp ../database/scripts/create_database.sql $SUBMISSION_DIR/
-cp ../database/scripts/insert_data.sql $SUBMISSION_DIR/
-cp ../database/scripts/queries.sql $SUBMISSION_DIR/
-cp ../database/design/ERD.png $SUBMISSION_DIR/
-cp ../database/design/design_reasoning.md $SUBMISSION_DIR/
-cp ../docker-compose.yml $SUBMISSION_DIR/
+cp -r src/WebAPI submission/$SUBMISSION_DIR/
+cp database/scripts/create_database.sql submission/$SUBMISSION_DIR/
+cp database/scripts/insert_data.sql submission/$SUBMISSION_DIR/
+cp database/scripts/queries.sql submission/$SUBMISSION_DIR/
+cp database/design/ERD.png submission/$SUBMISSION_DIR/ 2>/dev/null || true
+cp database/design/design_reasoning.md submission/$SUBMISSION_DIR/ 2>/dev/null || true
+cp docker-compose.yml submission/$SUBMISSION_DIR/
 
 # Remove build artifacts
-rm -rf $SUBMISSION_DIR/WebAPI/bin
-rm -rf $SUBMISSION_DIR/WebAPI/obj
+rm -rf submission/$SUBMISSION_DIR/WebAPI/bin
+rm -rf submission/$SUBMISSION_DIR/WebAPI/obj
 
 echo "Creating zip file: $ZIP_NAME"
-cd $SUBMISSION_DIR
+cd submission/$SUBMISSION_DIR
 
 # Check if zip is available, otherwise use tar
 if command -v zip >/dev/null 2>&1; then
@@ -46,11 +46,11 @@ else
     tar -czf ../$TAR_NAME .
     echo "Created: $TAR_NAME (rename to .zip if needed)"
 fi
-cd ..
+cd ../..
 
-rm -rf $SUBMISSION_DIR
+rm -rf submission/$SUBMISSION_DIR
 
-echo "✓ Submission package created: $ZIP_NAME"
+echo "✓ Submission package created: submission/$ZIP_NAME"
 echo ""
 echo "Package contents:"
 echo "- WebAPI/ (cleaned .NET solution with Dockerfile)"

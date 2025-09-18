@@ -2,14 +2,14 @@
 
 A REST API for a food delivery platform that connects home kitchen cooks with customers through cyclist delivery services.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Using Docker Compose (Recommended)
 ```bash
 # Start API and Database
 docker compose up -d
 
-# API available at: http://localhost:8080/api/menu
+# API available at: http://localhost:8080/api/Menu
 # Swagger UI: http://localhost:8080/swagger
 ```
 
@@ -18,11 +18,11 @@ docker compose up -d
 cd src/WebAPI
 dotnet run
 
-# API available at: http://localhost:5097/api/menu
+# API available at: http://localhost:5097/api/Menu
 # Swagger UI: http://localhost:5097/swagger
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 assignment_1/
@@ -46,9 +46,9 @@ assignment_1/
 └── docker-compose.yml         # Container orchestration
 ```
 
-## 🔌 API Endpoint
+## API Endpoint
 
-### GET /api/menu
+### GET /api/Menu
 Returns available dishes from local kitchens.
 
 **Response:**
@@ -60,28 +60,28 @@ Returns available dishes from local kitchens.
 ]
 ```
 
-## 🗄️ Database Setup
+## Database Setup
 
 After starting containers with `docker compose up -d`:
 
 ```bash
 # Create database
 docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P YourStrong@Passw0rd123 -C \
+  -S localhost -U sa -P MyP@ssw0rd2024! -C \
   -Q "CREATE DATABASE LocalFoodDB"
 
 # Run schema script
 docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P YourStrong@Passw0rd123 -C \
+  -S localhost -U sa -P MyP@ssw0rd2024! -C \
   -d LocalFoodDB -i /scripts/create_database.sql
 
 # Insert sample data
 docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P YourStrong@Passw0rd123 -C \
+  -S localhost -U sa -P MyP@ssw0rd2024! -C \
   -d LocalFoodDB -i /scripts/insert_data.sql
 ```
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Framework:** ASP.NET Core 8.0
 - **Database:** SQL Server 2022
@@ -89,7 +89,7 @@ docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
 - **API Documentation:** Swagger/OpenAPI
 - **Architecture:** RESTful API
 
-## 📊 Database Schema
+## Database Schema
 
 9 tables modeling a food delivery system:
 - **Users:** Cook, Customer, Cyclist
@@ -97,7 +97,7 @@ docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
 - **Delivery:** Trip, TripStop
 - **Feedback:** Rating
 
-## 🐳 Docker Commands
+## Docker Commands
 
 ```bash
 # View logs
@@ -113,7 +113,7 @@ docker compose down -v
 docker ps
 ```
 
-## 📝 Requirements
+## Requirements
 
 - .NET 8.0 SDK (local development)
 - Docker & Docker Compose (containerized deployment)

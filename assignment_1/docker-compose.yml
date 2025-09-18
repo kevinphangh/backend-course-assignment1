@@ -1,34 +1,32 @@
-# Docker Compose configuration for Local Food Delivery API
-# Orchestrates SQL Server database and Web API containers
+# docker compose for assignment 1
 
 services:
-  # SQL Server 2022 database
+  # database
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: localfood-sqlserver
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=YourStrong@Passw0rd123
-      - MSSQL_PID=Developer  # Free Developer edition
+      - MSSQL_SA_PASSWORD=MyP@ssw0rd2024!
+      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
-      # Persistent data storage
       - sqldata:/var/opt/mssql
-      # Mount SQL scripts for initialization
       - ./database/scripts:/scripts:ro
     networks:
       - localfood-network
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong@Passw0rd123", "-C", "-Q", "SELECT 1"]
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "MyP@ssw0rd2024!", "-C", "-Q", "SELECT 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
     restart: unless-stopped
 
-  # ASP.NET Core Web API
+  # api
   webapi:
+    image: localfood-api:latest
     build:
       context: ./src/WebAPI
       dockerfile: Dockerfile
@@ -36,23 +34,20 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      # Connection string using container DNS name
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=LocalFoodDB;User Id=sa;Password=YourStrong@Passw0rd123;TrustServerCertificate=true
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=LocalFoodDB;User Id=sa;Password=MyP@ssw0rd2024!;TrustServerCertificate=true
     ports:
       - "8080:8080"
     depends_on:
       sqlserver:
-        condition: service_healthy  # Wait for SQL Server to be ready
+        condition: service_healthy
     networks:
       - localfood-network
     restart: unless-stopped
 
-# Named volumes persist data between container restarts
 volumes:
   sqldata:
     driver: local
 
-# Bridge network enables container-to-container communication
 networks:
   localfood-network:
     driver: bridge

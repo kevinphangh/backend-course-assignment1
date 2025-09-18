@@ -1,4 +1,4 @@
--- SQL Server 2022 schema for Local Food Delivery (SW4BAD Assignment 1)
+-- SQL Server 2022 schema for Local Food Delivery (asignment 1)
 
 -- Drop tables in dependency order
 IF OBJECT_ID('dbo.Rating', 'U') IS NOT NULL DROP TABLE dbo.Rating;

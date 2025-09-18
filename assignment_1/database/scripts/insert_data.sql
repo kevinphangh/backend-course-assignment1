@@ -3,23 +3,23 @@
 
 -- Cook records
 INSERT INTO dbo.Cook (Name, Address, Phone, PersonalID) VALUES
-('Noah''s Kitchen', 'Finlandsgade 17, 8200 Aarhus N', '+45 71555080', '010100-4201'),
-('Helle''s Kitchen', 'Ny Munkegade 118, 8200', '+45 12345678', '020202-1234'),
-('Maria''s Kitchen', 'Finsensgade 1493, 8000 Aarhus', '+45 87654321', '030303-5678');
+('Mormors Mad', 'Finlandsgade 17, 8200 Aarhus N', '+45 71555080', '010100-4201'),
+('Studenter Køkken', 'Ny Munkegade 118, 8200', '+45 12345678', '020202-1234'),
+('Pizza & Pasta', 'Finsensgade 1493, 8000 Aarhus', '+45 87654321', '030303-5678');
 GO
 
 -- Cyclist records
 INSERT INTO dbo.Cyclist (Name, Phone, PersonalID, BikeType) VALUES
-('Star', '+45 98765432', '040404-9876', 'Mountain Bike'),
-('John', '+45 11223344', '050505-1122', 'Road Bike'),
-('Emma', '+45 55667788', '060606-5566', 'Electric Bike');
+('Mikkel', '+45 98765432', '040404-9876', 'Mountain Bike'),
+('Lars', '+45 11223344', '050505-1122', 'Road Bike'),
+('Sofie', '+45 55667788', '060606-5566', 'Electric Bike');
 GO
 
 -- Customer records
 INSERT INTO dbo.Customer (Name, Address, Phone, PaymentOption) VALUES
-('Knuth', 'Nordre Ringgade 1, 8000 Aarhus C', '+45 33445566', 'Card'),
-('Alice', 'Vesterbro Torv 3, 8000 Aarhus C', '+45 77889900', 'MobilePay'),
-('Bob', 'Mejlgade 51, 8000 Aarhus C', '+45 22334455', 'Card');
+('Peter Jensen', 'Nordre Ringgade 1, 8000 Aarhus C', '+45 33445566', 'Card'),
+('Anne Nielsen', 'Vesterbro Torv 3, 8000 Aarhus C', '+45 77889900', 'MobilePay'),
+('Thomas Hansen', 'Mejlgade 51, 8000 Aarhus C', '+45 22334455', 'Card');
 GO
 
 -- Portion records (daily availability windows)
@@ -33,7 +33,7 @@ INSERT INTO dbo.Portion (CookID, Name, Quantity, Price, AvailableFrom, Available
 GO
 
 -- Order records
--- Order #42 (ID=0): Multi-kitchen order (Noah's + Helle's)
+-- first order - multiple kitchens
 INSERT INTO dbo.[Order] (CustomerID, OrderDate, TotalAmount) VALUES
 (0, '2024-01-15 12:45:00', 259),  -- Order #42
 (1, '2024-01-15 13:00:00', 95),
@@ -42,8 +42,8 @@ GO
 
 -- OrderItem records for Order #42
 INSERT INTO dbo.OrderItem (OrderID, PortionID, CookID, Quantity, Price) VALUES
-(0, 0, 0, 2, 178),  -- 2x Spaghetti from Noah's
-(0, 3, 1, 1, 95);   -- 1x Grilled Chicken from Helle's
+(0, 0, 0, 2, 178),  -- 2x Spaghetti from Mormors Mad
+(0, 3, 1, 1, 95);   -- 1x Grilled Chicken from Studenter Køkken
 GO
 
 -- Additional order items
@@ -53,7 +53,7 @@ INSERT INTO dbo.OrderItem (OrderID, PortionID, CookID, Quantity, Price) VALUES
 GO
 
 -- Trip records
--- Trip #52 (ID=0): Multiple stops for Star
+-- Trip #52 (ID=0): Multiple stops for Mikkel
 INSERT INTO dbo.Trip (CyclistID, OrderID, StartTime, EndTime, Earnings) VALUES
 (0, 0, '2024-01-15 12:30:00', '2024-01-15 13:15:00', 50),  -- Trip #52
 (1, 1, '2024-01-15 12:45:00', '2024-01-15 13:20:00', 45),

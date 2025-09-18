@@ -4,7 +4,7 @@
 
 ---
 
-## 🚀 Quick Setup Check
+## Quick Setup
 
 ```bash
 # 1. API Running?
@@ -17,13 +17,13 @@ docker ps | grep sqlserver
 
 # 3. Run All Queries
 docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
-  -S localhost -U sa -P YourStrong@Passw0rd123 -C \
+  -S localhost -U sa -P MyP@ssw0rd2024! -C \
   -d LocalFoodDB -i /scripts/queries.sql
 ```
 
 ---
 
-## 📝 Web API Questions & Answers
+## Web API Q&A
 
 ### Q: Where is the endpoint code?
 **File:** `src/WebAPI/Controllers/MenuController.cs`
@@ -52,7 +52,7 @@ docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
 
 ---
 
-## 🐳 Docker Questions & Answers
+## Docker Q&A
 
 ### Q: What stages in your Dockerfile?
 **NOT services - STAGES:**
@@ -104,13 +104,13 @@ docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
 
 ---
 
-## 🗄️ Database Questions & Answers
+## Database Q&A
 
 ### Q: What tables?
 **9 tables:** Cook, Customer, Cyclist, Portion, Order, OrderItem, Trip, TripStop, Rating
 
 ### Q: E/R Diagram compliance?
-✅ **Chen notation used:**
+**Chen notation used:**
 - Rectangles = Entities
 - Diamonds = Relationships
 - 1, N, M = Cardinalities
@@ -141,7 +141,7 @@ docker exec localfood-sqlserver /opt/mssql-tools18/bin/sqlcmd \
 
 ### Query 1: Cook Personal Data
 ```sql
-SELECT Address, Phone, PersonalID FROM Cook WHERE Name = 'Noah''s Kitchen'
+SELECT Address, Phone, PersonalID FROM Cook WHERE Name = 'Mormors Mad'
 ```
 Returns: 3 columns
 
@@ -193,7 +193,7 @@ Returns: 4.3 (one decimal place)
 Server=sqlserver  # Uses Docker DNS, not localhost
 Database=LocalFoodDB
 User Id=sa
-Password=YourStrong@Passw0rd123
+Password=MyP@ssw0rd2024!
 ```
 
 ---
@@ -235,15 +235,15 @@ Password=YourStrong@Passw0rd123
 
 ## 🏆 Grade 12 Checklist
 
-✅ **Group42** first dish (Line 19 MenuController)
-✅ **Multi-stage Docker** (200MB final, not 800MB)
-✅ **Chen notation** strictly followed
-✅ **All cardinalities** marked (1/N/M)
-✅ **7 queries** with correct output
-✅ **Docker Hub** published (kevinphangh/local-food-api:latest)
-✅ **Health checks** configured
-✅ **No junction tables** in ERD diagram
-✅ **Can explain** every design decision
+- Group42 first dish (Line 19 MenuController)
+- Multi-stage Docker (200MB final)
+- Chen notation followed
+- All cardinalities marked
+- 7 queries with output
+- Docker Hub published
+- Health checks configured
+- No junction tables in ERD
+- Can explain design decisions
 
 ---
 
@@ -277,14 +277,14 @@ Password=YourStrong@Passw0rd123
 
 ---
 
-## ✅ Final Confidence Boost
+## Final Notes
 
 **You built:**
-- ✅ Working API with "Group42" requirement
-- ✅ Optimized Docker image (75% smaller)
-- ✅ Proper database design (3NF)
-- ✅ All queries returning correct data
-- ✅ Production-ready architecture
+- Working API with Group42 requirement
+- Optimized Docker image
+- Database design (3NF)
+- All queries working
+- Ready for production
 
 **You understand:**
 - Why multi-stage builds matter
